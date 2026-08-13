@@ -28,9 +28,13 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "backgroundColor": "#F5F4F0",
+          "image": "./assets/images/dang-logo-black.svg",
+          "imageWidth": 180,
+          "dark": {
+            "backgroundColor": "#1A1A1A",
+            "image": "./assets/images/dang-logo-white.svg"
+          }
         }
       ]
     ],

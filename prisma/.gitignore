@@ -1,0 +1,6 @@
+# Prisma
+
+Prisma-related environment.
+.env
+*.db
+*.db-journal

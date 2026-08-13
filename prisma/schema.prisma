@@ -1,0 +1,797 @@
+// DANG Community Platform — Prisma Schema
+//
+// Structural Identity Separation (NFR-S02):
+// Anonymous posts DO NOT store author_id on the Post row.
+// The mapping lives in a separate `AnonymousIdentity` table with RLS-restricted access.
+// A leaked Post row CANNOT reveal author identity — mapping requires joining across
+// a row-level-security-gated table only accessible to founder/admin+audit role.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  MEMBER
+  MODERATOR
+  ADMIN
+  FOUNDER
+}
+
+enum SubscriptionTierSlug {
+  BASIC
+  PREMIUM
+  VIP
+  FOUNDERS_CIRCLE
+}
+
+enum BillingInterval {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  PAUSED
+  INCOMPLETE
+  EXPIRED
+  TRIALING
+}
+
+enum PaymentGateway {
+  PAYSTACK
+  FLUTTERWAVE
+  STRIPE
+}
+
+enum InvoiceStatus {
+  PAID
+  OPEN
+  VOID
+  UNCOLLECTIBLE
+  REFUNDED
+}
+
+enum RSVPStatus {
+  YES
+  NO
+  MAYBE
+}
+
+enum FaithCadence {
+  DAILY
+  WEEKDAYS
+  CUSTOM_DAYS
+}
+
+enum DropPhase {
+  UPCOMING
+  MEMBER_ONLY
+  PUBLIC
+  ENDED
+}
+
+enum FounderContentType {
+  DEVOTIONAL
+  JOURNAL
+  AUDIO
+  VIDEO
+  LETTER
+  BEHIND_THE_SCENES
+}
+
+model Member {
+  id                String   @id @default(uuid())
+  email             String   @unique
+  displayName       String
+  handle            String   @unique
+  avatarUrl         String?
+  bio               String?
+  location          String?
+  timezone          String   @default("Africa/Lagos")
+  role              UserRole @default(MEMBER)
+  isVerified        Boolean  @default(false)
+  has2FA            Boolean  @default(false)
+  tfaSecret         String?
+  passwordHash      String?
+  referralCode      String?  @unique
+  referralUsedId    String?
+  interests         String[] @default([])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  subscription      Subscription?
+  posts             Post[]
+  threads           Thread[]
+  replies           Reply[]
+  circleMemberships CircleMember[]
+  sentInvites       CircleInvite[] @relation("InviteSender")
+  receivedInvites   CircleInvite[] @relation("InviteRecipient")
+  faithSettings     FaithSettings?
+  faithReadPosts    FaithPostRead[]
+  dmThreads         DMThreadParticipant[]
+  dmMessages        DMMessage[]
+  exportsRequested    DataExport[]
+  erasureRequests DataErasureRequest[]
+
+  @@map("members")
+}
+
+model SubscriptionTier {
+  id                        String              @id @default(uuid())
+  name                      String
+  slug                      SubscriptionTierSlug @unique
+  description               String
+  displayOrder              Int                 @default(0)
+  features                  String[]            @default([])
+  monthlyPriceNGN            Decimal             @db.Decimal(12, 2)
+  quarterlyPriceNGN          Decimal             @db.Decimal(12, 2)
+  yearlyPriceNGN           Decimal             @db.Decimal(12, 2)
+  monthlyPriceGBP          Decimal?            @db.Decimal(12, 2)
+  quarterlyPriceGBP        Decimal?            @db.Decimal(12, 2)
+  yearlyPriceGBP         Decimal?            @db.Decimal(12, 2)
+  currency                  String              @default("NGN")
+  isPopular                 Boolean             @default(false)
+  isPublic                  Boolean             @default(true)
+  trialDays                 Int?
+  dangLifestyleDiscountPct  Int                 @default(10)
+  dropsEarlyAccessHours     Int                 @default(24)
+  createdAt                 DateTime            @default(now())
+  updatedAt                 DateTime            @updatedAt
+
+  subscriptions             Subscription[]
+  founderPosts              FounderPost[]
+
+  @@map("subscription_tiers")
+}
+
+model Subscription {
+  id                   String               @id @default(uuid())
+  memberId             String               @unique
+  member               Member             @relation(fields: [memberId], references: [id])
+  tierId               String
+  tier                 SubscriptionTier   @relation(fields: [tierId], references: [id])
+  status               SubscriptionStatus @default(INCOMPLETE)
+  billingInterval      BillingInterval    @default(MONTHLY)
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean             @default(false)
+  canceledAt          DateTime?
+  canceledReason      String?
+  pausedUntil         DateTime?
+  pausedAt           DateTime?
+  trialEndsAt         DateTime?
+  nextBillingAmount    Decimal             @db.Decimal(12, 2)
+  currency             String              @default("NGN")
+  gateway              PaymentGateway
+  gatewayCustomerId    String?
+  gatewaySubscriptionId String?
+  discountActive       Boolean             @default(true)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  invoices             Invoice[]
+  paymentMethods       PaymentMethod[]
+
+  @@index([status)
+  @@map("subscriptions")
+}
+
+model PaymentMethod {
+  id                    String         @id @default(uuid())
+  memberId              String
+  subscriptionId        String?
+  subscription         Subscription?  @relation(fields: [subscriptionId], references: [id])
+  type                  String
+  brand                 String?
+  last4                 String?
+  expMonth              Int?
+  expYear               Int?
+  bankName              String?
+  mobileNetwork         String?
+  isDefault             Boolean          @default(false)
+  gateway               PaymentGateway
+  gatewayPaymentMethodId String
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  @@index([memberId])
+  @@map("payment_methods")
+}
+
+model Invoice {
+  id              String          @id @default(uuid())
+  memberId         String
+  subscriptionId   String
+  subscription   Subscription    @relation(fields: [subscriptionId], references: [id])
+  number           String        @unique
+  status          InvoiceStatus @default(OPEN)
+  subtotal       Decimal       @db.Decimal(12, 2)
+  tax            Decimal       @default(0) @db.Decimal(12, 2)
+  discount         Decimal       @default(0) @db.Decimal(12, 2)
+  total          Decimal       @db.Decimal(12, 2)
+  currency         String        @default("NGN")
+  periodStart      DateTime
+  periodEnd        DateTime
+  dueDate       DateTime?
+  paidAt          DateTime?
+  paymentAttempts  Int           @default(0)
+  nextAttemptAt  DateTime?
+  hostedInvoiceUrl String?
+  pdfUrl           String?
+  lineItems      InvoiceLineItem[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([memberId, status])
+  @@map("invoices")
+}
+
+model InvoiceLineItem {
+  id          String  @id @default(uuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Int     @default(1)
+  unitAmount  Decimal @db.Decimal(12, 2)
+  totalAmount Decimal @db.Decimal(12, 2)
+  tierId      String?
+
+  @@map("invoice_line_items")
+}
+
+model Channel {
+  id           String   @id @default(uuid())
+  name         String
+  slug         String   @unique
+  emoji        String?
+  description  String   @default("")
+  isPrivate    Boolean  @default(false)
+  memberCount  Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  lastActivityAt DateTime @default(now())
+
+  threads      Thread[]
+  posts        Post[]
+
+  @@map("channels")
+}
+
+model Thread {
+  id          String   @id @default(uuid())
+  channelId    String
+  channel     Channel  @relation(fields: [channelId], references: [id])
+  authorId    String?
+  title      String
+  slug      String   @unique
+  preview     String   @default("")
+  isLocked    Boolean  @default(false)
+  isPinned    Boolean  @default(false)
+  viewCount   Int      @default(0)
+  replyCount  Int      @default(0)
+  participantCount Int @default(0)
+  lastReplyAt DateTime?
+  tags        String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  posts       Post[]
+
+  @@index([channelId, createdAt])
+  @@map("threads")
+}
+
+model Post {
+  id            String   @id @default(uuid())
+  threadId      String?
+  thread        Thread?  @relation(fields: [threadId], references: [id])
+  channelId     String
+  channel       Channel  @relation(fields: [channelId], references: [id])
+  // IMPORTANT (NFR-S02):
+  // authorId is NULLABLE and ALWAYS null for anonymous posts.
+  // For anonymous posts, identity is stored in `AnonymousIdentity` only.
+  authorId      String?
+  content       String
+  isAnonymous   Boolean  @default(false)
+  anonymousHandle String?
+  isPinned      Boolean  @default(false)
+  likeCount     Int      @default(0)
+  replyCount    Int      @default(0)
+  repostCount   Int      @default(0)
+  attachments   Json[]   @default([])
+  reactions     Json     @default("{}")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  replies       Reply[]
+
+  @@index([channelId, createdAt])
+  @@index([threadId])
+  @@map("posts")
+}
+
+// NFR-S02: Structural separation of anonymous author identity from Post record.
+// This table should be protected with row-level-security accessible only to
+// FOUNDER/ADMIN + audit role, NEVER joined by normal read patterns.
+model AnonymousIdentity {
+  id              String   @id @default(uuid())
+  postId          String   @unique
+  post            Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorMemberId  String
+  author          Member   @relation(fields: [authorMemberId], references: [id])
+  anonymousHandle String
+  // Unmask audit lives in AnonymousUnmaskLog.
+  createdAt       DateTime @default(now())
+
+  @@index([authorMemberId])
+  @@map("anonymous_identities")
+}
+
+// FR-C03: Auditable unmask actions. Founder/admin unmask MUST be logged.
+model AnonymousUnmaskLog {
+  id              String   @id @default(uuid())
+  postId          String
+  actorId         String
+  actor           Member   @relation("UnmaskActor", fields: [actorId], references: [id])
+  reason          String
+  revealedMemberId String
+  createdAt       DateTime @default(now())
+
+  @@index([postId, createdAt])
+  @@map("anonymous_unmask_logs")
+}
+
+model Reply {
+  id            String   @id @default(uuid())
+  postId        String
+  post          Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parentReplyId String?
+  parentReply   Reply?   @relation(fields: [parentReplyId], references: [id], onDelete: Cascade)
+  authorId      String?
+  isAnonymous   Boolean  @default(false)
+  anonymousHandle String?
+  content       String
+  likeCount     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  childReplies  Reply[]
+
+  @@index([postId, createdAt])
+  @@map("replies")
+}
+
+model Circle {
+  id               String   @id @default(uuid())
+  name             String
+  slug             String   @unique
+  emoji            String?
+  description      String?
+  coverUrl         String?
+  memberCount      Int      @default(0)
+  isPrivate        Boolean  @default(true)
+  requiresApproval Boolean  @default(false)
+  theme            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  lastActivityAt   DateTime @default(now())
+
+  memberships      CircleMember[]
+  invites          CircleInvite[]
+
+  @@map("circles")
+}
+
+model CircleMember {
+  id        String   @id @default(uuid())
+  circleId  String
+  circle    Circle   @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  memberId  String
+  member    Member   @relation(fields: [memberId], references: [id])
+  role      String   @default("MEMBER") // LEADER | MODERATOR | MEMBER
+  invitedBy String?
+  joinedAt  DateTime @default(now())
+
+  @@unique([circleId, memberId])
+  @@index([memberId])
+  @@map("circle_members")
+}
+
+model CircleInvite {
+  id           String    @id @default(uuid())
+  circleId     String
+  circle       Circle    @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  email        String?
+  toMemberId   String?
+  toMember   Member?   @relation("InviteRecipient", fields: [toMemberId], references: [id])
+  sentById     String?
+  sentBy       Member?   @relation("InviteSender", fields: [sentById], references: [id])
+  message      String?
+  status       String    @default("PENDING") // PENDING | ACCEPTED | DECLINED | EXPIRED
+  expiresAt  DateTime
+  acceptedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([circleId, status])
+  @@map("circle_invites")
+}
+
+model FaithPost {
+  id             String   @id @default(uuid())
+  title          String
+  content        String
+  verse          String?
+  devotionalText String?
+  prayerPoints   String[] @default([])
+  scheduledFor   DateTime
+  timezone       String   @default("Africa/Lagos")
+  publishedAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  reads          FaithPostRead[]
+
+  @@index([scheduledFor])
+  @@map("faith_posts")
+}
+
+model FaithSettings {
+  id                  String       @id @default(uuid())
+  memberId            String       @unique
+  member              Member       @relation(fields: [memberId], references: [id])
+  timezone            String       @default("Africa/Lagos")
+  dailyTime           String       @default("06:00")
+  notifyEnabled      Boolean      @default(true)
+  preReminderMinutes Int          @default(5)
+  soundEnabled        Boolean      @default(true)
+  vibrationEnabled    Boolean      @default(true)
+  cadence          FaithCadence @default(DAILY)
+  customDays         Int[]        @default([])
+  streakGoalDays     Int          @default(7)
+  createdAt           DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  @@map("faith_settings")
+}
+
+model FaithPostRead {
+  id        String   @id @default(uuid())
+  postId    String
+  post      FaithPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  memberId  String
+  member    Member   @relation(fields: [memberId], references: [id])
+  readAt    DateTime @default(now())
+
+  @@unique([postId, memberId])
+  @@map("faith_post_reads")
+}
+
+model FounderPost {
+  id              String              @id @default(uuid())
+  title           String
+  content         String
+  contentType     FounderContentType    @default(DEVOTIONAL)
+  requiredTierId  String
+  requiredTier    SubscriptionTier    @relation(fields: [requiredTierId], references: [id])
+  isShareable     Boolean             @default(false) // FR-E03
+  isEmbeddable    Boolean             @default(false)
+  mediaUrl       String?
+  mediaType       String?
+  publishAt      DateTime
+  isPublished     Boolean             @default(false)
+  viewCount        Int                 @default(0)
+  likeCount        Int                 @default(0)
+  commentCount     Int                 @default(0)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  @@index([requiredTierId, publishAt])
+  @@map("founder_posts")
+}
+
+model Course {
+  id            String   @id @default(uuid())
+  title           String
+  slug            String   @unique
+  emoji           String?
+  coverUrl        String?
+  description     String
+  instructor      String
+  instructorBio   String?
+  lessonCount     Int      @default(0)
+  duration        String   @default("")
+  tierId          String?
+  category        String   @default("faith")
+  isLive          Boolean  @default(false)
+  tags            String[] @default([])
+  publishedAt   DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  lessons         Lesson[]
+
+  @@map("courses")
+}
+
+model Lesson {
+  id          String   @id @default(uuid())
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  duration    String
+  type        String   @default("video")
+  orderIndex  Int      @default(0)
+  videoUrl    String?
+  audioUrl   String?
+  readingText     String?
+  resources   Json[]   @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([courseId, orderIndex])
+  @@map("lessons")
+}
+
+model CourseProgress {
+  id                String   @id @default(uuid())
+  memberId          String
+  courseId          String
+  lessonsCompleted  Int      @default(0)
+  lessonsTotal       Int      @default(0)
+  lastLessonId      String?
+  lastVisitedAt     DateTime?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([memberId, courseId])
+  @@map("course_progress")
+}
+
+model LiveSession {
+  id                 String   @id @default(uuid())
+  title              String
+  description        String?
+  host            String
+  hostAvatarUrl      String?
+  startAt            DateTime
+  endAt              DateTime
+  timezone           String   @default("Africa/Lagos")
+  location           String?
+  isVirtual          Boolean  @default(true)
+  roomUrl          String?
+  participantCount   Int      @default(0)
+  capacity           Int?
+  tierId             String?
+  category           String   @default("faith")
+  replayId         String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([startAt])
+  @@map("live_sessions")
+}
+
+model ReplayRecording {
+  id              String   @id @default(uuid())
+  liveSessionId   String?
+  title             String
+  playbackUrl      String
+  thumbnailUrl     String?
+  duration         String
+  category        String   @default("faith")
+  transcriptUrl String?
+  viewCount       Int      @default(0)
+  tierId         String?
+  recordedAt    DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("replay_recordings")
+}
+
+model CommunityEvent {
+  id                 String      @id @default(uuid())
+  title              String
+  slug               String      @unique
+  type               String      @default("meetup")
+  description        String?
+  coverUrl           String?
+  startAt            DateTime
+  endAt              DateTime
+  timezone           String      @default("Africa/Lagos")
+  venue              String?
+  address            String?
+  isVirtual          Boolean     @default(false)
+  roomUrl            String?
+  attendeeCount       Int         @default(0)
+  capacity           Int?
+  tierId             String?
+  tags               String[]    @default([])
+  hostMemberId       String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  rsvps              EventRSVP[]
+
+  @@index([startAt])
+  @@map("community_events")
+}
+
+model EventRSVP {
+  id               String      @id @default(uuid())
+  eventId          String
+  event            CommunityEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  memberId         String
+  status           RSVPStatus  @default(MAYBE)
+  plusOnes        Int         @default(0)
+  dietary          String?
+  accessibility String?
+  waitlistPosition  Int?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@unique([eventId, memberId])
+  @@map("event_rsvps")
+}
+
+model Drop {
+  id                    String    @id @default(uuid())
+  title                 String
+  slug                  String    @unique
+  coverUrl            String?
+  description           String?
+  memberOnlyStartsAt  DateTime
+  publicStartsAt     DateTime
+  endsAt                DateTime
+  totalUnits         Int?
+  reservedForMembers Int?
+  soldUnits         Int?
+  waitlistCount        Int?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  productLinks         DropProduct[]
+  testerInvites       TesterInvite[]
+
+  @@index([memberOnlyStartsAt, publicStartsAt])
+  @@map("drops")
+}
+
+model DropProduct {
+  id        String @id @default(uuid())
+  dropId    String
+  drop      Drop   @relation(fields: [dropId], references: [id], onDelete: Cascade)
+  productId String
+  name      String
+  price     Decimal @db.Decimal(12, 2)
+  currency  String  @default("NGN")
+  imageUrl  String?
+
+  @@unique([dropId, productId])
+  @@map("drop_products")
+}
+
+model TesterInvite {
+  id               String   @id @default(uuid())
+  dropId           String?
+  drop             Drop?    @relation(fields: [dropId], references: [id])
+  title            String
+  message          String
+  memberId         String
+  status           String   @default("PENDING") // PENDING|ACCEPTED|DECLINED|COMPLETED
+  voucherCode      String?
+  feedbackSubmitted Boolean  @default(false)
+  feedbackDeadline  DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([memberId, status])
+  @@map("tester_invites")
+}
+
+model DMThread {
+  id                String                  @id @default(uuid())
+  participantIds    String[]                @default([])
+  lastMessageAt       DateTime?
+  lastMessagePreview String?
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+
+  participants        DMThreadParticipant[]
+  messages            DMMessage[]
+
+  @@index([lastMessageAt])
+  @@map("dm_threads")
+}
+
+model DMThreadParticipant {
+  id             String   @id @default(uuid())
+  threadId       String
+  thread         DMThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  memberId       String
+  member         Member   @relation(fields: [memberId], references: [id])
+  unreadCount    Int      @default(0)
+  isHidden       Boolean  @default(false)
+
+  @@unique([threadId, memberId])
+  @@map("dm_thread_participants")
+}
+
+model DMMessage {
+  id             String   @id @default(uuid())
+  threadId       String
+  thread         DMThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  fromMemberId String
+  fromMember   Member   @relation(fields: [fromMemberId], references: [id])
+  content        String
+  attachments  Json[]   @default([])
+  deliveredAt DateTime?
+  readAt       DateTime?
+  reactions   Json     @default("{}")
+  createdAt        DateTime @default(now())
+
+  @@index([threadId, createdAt])
+  @@map("dm_messages")
+}
+
+model DataExport {
+  id              String   @id @default(uuid())
+  memberId      String
+  member          Member   @relation(fields: [memberId], references: [id])
+  formats         String[] @default([]) // JSON | CSV
+  scopes          String[] @default([])
+  status          String   @default("QUEUED")
+  progress        Int      @default(0)
+  manifestJson    Json?
+  downloadUrlJson String?
+  downloadUrlCsv  String?
+  sizeBytes       BigInt?
+  recordCounts Json?
+  createdAt        DateTime @default(now())
+  completedAt      DateTime?
+  expiresAt         DateTime?
+
+  @@index([memberId, status])
+  @@map("data_exports")
+}
+
+model DataErasureRequest {
+  id             String   @id @default(uuid())
+  memberId      String
+  member          Member   @relation(fields: [memberId], references: [id])
+  status          String   @default("PENDING_REVIEW")
+  reason           String?
+  stagesJson     Json?
+  completesBy      DateTime
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+
+  @@index([memberId, status])
+  @@map("data_erasure_requests")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  action     String
+  resourceType String
+  resourceId   String?
+  metaJson     Json?
+  ipAddress    String?
+  userAgent    String?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId, action, createdAt])
+  @@map("audit_logs")
+}

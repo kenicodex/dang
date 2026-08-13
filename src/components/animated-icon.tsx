@@ -1,14 +1,22 @@
 import { Image } from 'expo-image';
 import * as SplashScreen from 'expo-splash-screen';
 import { useState } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { Dimensions, StyleSheet, View, useColorScheme } from 'react-native';
 import Animated, { Easing, Keyframe } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { colors } from '@/theme/colors';
+
 const INITIAL_SCALE_FACTOR = Dimensions.get('screen').height / 90;
-const DURATION = 600;
+const DURATION = 4500;
+
+const logoSource = {
+  light: require('@/assets/images/dang-logo-black.svg'),
+  dark: require('@/assets/images/dang-logo-white.svg'),
+};
 
 export function AnimatedSplashOverlay() {
+  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const [animate, setAnimate] = useState(false);
   const [visible, setVisible] = useState(true);
 
@@ -22,18 +30,15 @@ export function AnimatedSplashOverlay() {
     20: {
       opacity: 1,
     },
-    70: {
-      opacity: 0,
-      easing: Easing.elastic(0.7),
-    },
     100: {
       opacity: 0,
-      transform: [{ scale: 1 }],
       easing: Easing.elastic(0.7),
     },
   });
 
-  const image = <Image style={styles.image} source={require('@/assets/images/expo-logo.png')} />;
+  const image = (
+    <Image style={styles.splashImage} contentFit="contain" source={logoSource[scheme]} />
+  );
 
   return animate ? (
     <Animated.View
@@ -43,7 +48,7 @@ export function AnimatedSplashOverlay() {
           scheduleOnRN(setVisible, false);
         }
       })}
-      style={styles.splashOverlay}>
+      style={[styles.splashOverlay, { backgroundColor: colors[scheme].bg }]}>
       {image}
     </Animated.View>
   ) : (
@@ -53,7 +58,7 @@ export function AnimatedSplashOverlay() {
           setAnimate(true);
         });
       }}
-      style={styles.splashOverlay}>
+      style={[styles.splashOverlay, { backgroundColor: colors[scheme].bg }]}>
       {image}
     </View>
   );
@@ -131,6 +136,10 @@ const styles = StyleSheet.create({
     width: 76,
     height: 71,
   },
+  splashImage: {
+    width: 180,
+    height: 60,
+  },
   background: {
     borderRadius: 40,
     experimental_backgroundImage: `linear-gradient(180deg, #3C9FFE, #0274DF)`,
@@ -140,7 +149,6 @@ const styles = StyleSheet.create({
   },
   splashOverlay: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: '#208AEF',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
