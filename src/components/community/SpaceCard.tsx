@@ -1,3 +1,4 @@
+import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Pressable, StyleSheet, View } from 'react-native'
 
@@ -26,9 +27,13 @@ export function SpaceCard({ space, newCount, onPress }: SpaceCardProps) {
 
   return (
     <Pressable style={styles.card} onPress={onPress}>
-      <LinearGradient colors={style.gradient} style={styles.thumb}>
-        <Text style={styles.thumbEmoji}>{style.emoji}</Text>
-      </LinearGradient>
+      {space.coverImageUrl ? (
+        <Image source={{ uri: space.coverImageUrl }} style={styles.thumb} contentFit="cover" />
+      ) : (
+        <LinearGradient colors={style.gradient} style={styles.thumb}>
+          <Text style={styles.thumbEmoji}>{style.emoji}</Text>
+        </LinearGradient>
+      )}
 
       <View style={styles.info}>
         <Text variant="h3" style={styles.name}>
@@ -62,6 +67,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 12,
     gap: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
   },
   thumb: {
     width: 88,
@@ -69,6 +79,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.light.surfaceAlt,
   },
   thumbEmoji: {
     fontSize: 30,

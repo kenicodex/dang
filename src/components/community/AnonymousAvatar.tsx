@@ -1,6 +1,8 @@
 import { StyleSheet, View } from 'react-native'
 import { SymbolView } from 'expo-symbols'
 
+import { colors } from '@/theme/colors'
+
 type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
 const DIMENSIONS: Record<Size, number> = { xs: 24, sm: 32, md: 44, lg: 64, xl: 96 }
@@ -27,7 +29,7 @@ export function AnonymousAvatar({ size = 'md' }: AnonymousAvatarProps) {
 
 const styles = StyleSheet.create({
   circle: {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: colors.light.neutral.black,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react'
 import { View, Modal, ModalProps, Pressable, StyleSheet, Dimensions, Platform } from 'react-native'
 import { Text } from './Text'
-import { Button } from './Button'
+import { colors } from '@/theme/colors'
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window')
 
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.light.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingTop: 8,
@@ -74,14 +74,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: colors.light.border,
     marginVertical: 8,
   },
   header: {
     paddingHorizontal: 20,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.light.border,
   },
   content: {
     padding: 20,

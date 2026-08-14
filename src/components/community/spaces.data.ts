@@ -1,5 +1,36 @@
 import { colors } from '@/theme/colors'
-import type { Channel, Post } from '@/types/community'
+import type { Channel, ChannelMember, Post } from '@/types/community'
+
+const MODERATOR: ChannelMember = {
+  id: 'mod-1',
+  displayName: 'Nkechi Okonkwo',
+  handle: '@Nkech_!',
+  initials: 'NO',
+}
+
+const MEMBERS: ChannelMember[] = [
+  {
+    id: 'member-1',
+    displayName: 'Nkechi Okonkwo',
+    handle: '@Nkech_!',
+    initials: 'NO',
+    bio: 'A space for entrepreneurs, founders, and business owners.',
+  },
+  {
+    id: 'member-2',
+    displayName: 'Nkechi Okonkwo',
+    handle: '@Nkech_!',
+    initials: 'NO',
+    bio: 'A space for entrepreneurs, founders, and business owners.',
+  },
+  {
+    id: 'member-3',
+    displayName: 'Nkechi Okonkwo',
+    handle: '@Nkech_!',
+    initials: 'NO',
+    bio: 'A space for entrepreneurs, founders, and business owners.',
+  },
+]
 
 export const CATEGORIES = ['All', 'Finance', 'Business', 'Networking', 'Social']
 
@@ -18,6 +49,7 @@ export const SPACES: Channel[] = [
     name: 'Wealth Building',
     slug: 'wealth-building',
     emoji: '💰',
+    coverImageUrl: 'https://picsum.photos/seed/wealth-building/300/380',
     category: 'Finance',
     tagline: 'Stewardship, abundance, and financial freedom',
     description:
@@ -33,6 +65,8 @@ export const SPACES: Channel[] = [
     unreadCount: 0,
     pinnedPostIds: [],
     memberAvatars: ['AM', 'BL', 'MP', 'CR'],
+    moderator: MODERATOR,
+    members: MEMBERS,
     lastActivityAt: now,
     createdAt: now,
     updatedAt: now,
@@ -42,6 +76,7 @@ export const SPACES: Channel[] = [
     name: 'Entrepreneurship',
     slug: 'entrepreneurship',
     emoji: '🚀',
+    coverImageUrl: 'https://picsum.photos/seed/entrepreneurship/300/380',
     category: 'Business',
     tagline: 'Building, launching, and scaling on your own terms',
     description:
@@ -57,6 +92,8 @@ export const SPACES: Channel[] = [
     unreadCount: 0,
     pinnedPostIds: [],
     memberAvatars: ['DT', 'JN', 'RK', 'SA'],
+    moderator: MODERATOR,
+    members: MEMBERS,
     lastActivityAt: now,
     createdAt: now,
     updatedAt: now,
@@ -66,6 +103,7 @@ export const SPACES: Channel[] = [
     name: 'Career Development',
     slug: 'career-development',
     emoji: '📈',
+    coverImageUrl: 'https://picsum.photos/seed/career-development/300/380',
     category: 'Networking',
     tagline: 'Leveling up your career, one connection at a time',
     description:
@@ -81,6 +119,8 @@ export const SPACES: Channel[] = [
     unreadCount: 0,
     pinnedPostIds: [],
     memberAvatars: ['TA', 'AK', 'FO', 'LB'],
+    moderator: MODERATOR,
+    members: MEMBERS,
     lastActivityAt: now,
     createdAt: now,
     updatedAt: now,
@@ -90,6 +130,7 @@ export const SPACES: Channel[] = [
     name: 'Connections',
     slug: 'connections',
     emoji: '👭',
+    coverImageUrl: 'https://picsum.photos/seed/connections/300/380',
     category: 'Social',
     tagline: 'Friendship, community, and showing up for each other',
     description:
@@ -105,6 +146,8 @@ export const SPACES: Channel[] = [
     unreadCount: 0,
     pinnedPostIds: [],
     memberAvatars: ['NC', 'PW', 'ZH', 'EO'],
+    moderator: MODERATOR,
+    members: MEMBERS,
     lastActivityAt: now,
     createdAt: now,
     updatedAt: now,
@@ -114,7 +157,7 @@ export const SPACES: Channel[] = [
 export const SPACE_POSTS: Record<string, Post[]> = {
   'wealth-building': [
     {
-      id: 'post-1',
+      id: 'wb-post-1',
       channelId: 'wealth-building',
       channelName: 'Wealth Building',
       author: { id: 'u1', displayName: 'Aisha Aminu', handle: '@aishaa' },
@@ -130,7 +173,7 @@ export const SPACE_POSTS: Record<string, Post[]> = {
       updatedAt: now,
     },
     {
-      id: 'post-2',
+      id: 'wb-post-2',
       channelId: 'wealth-building',
       channelName: 'Wealth Building',
       author: { id: 'u2', displayName: 'Brian Lee', handle: '@brianlee' },
@@ -146,7 +189,7 @@ export const SPACE_POSTS: Record<string, Post[]> = {
       updatedAt: now,
     },
     {
-      id: 'post-3',
+      id: 'wb-post-3',
       channelId: 'wealth-building',
       channelName: 'Wealth Building',
       author: { id: 'u3', displayName: 'Maya Patel', handle: '@mayap' },
@@ -162,7 +205,7 @@ export const SPACE_POSTS: Record<string, Post[]> = {
       updatedAt: now,
     },
     {
-      id: 'post-4',
+      id: 'wb-post-4',
       channelId: 'wealth-building',
       channelName: 'Wealth Building',
       author: { id: 'u4', displayName: 'Carlos Ramirez', handle: '@carlosr' },

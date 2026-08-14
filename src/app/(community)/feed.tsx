@@ -43,7 +43,9 @@ export default function FeedScreen() {
   const handlePostPress = (post: Post) => {
     if (post.moderationStatus === 'rejected') {
       setRejectedPost(post)
+      return
     }
+    router.push(`/(community)/thread/${post.id}`)
   }
 
   return (

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react'
-import { View, Text, StyleSheet, Animated, Dimensions, Platform } from 'react-native'
+import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native'
 
 type ToastType = 'success' | 'error' | 'info' | 'warning'
 

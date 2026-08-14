@@ -1,23 +1,31 @@
-import React, { ReactNode } from 'react'
-import { ActivityIndicator, Pressable, PressableProps, Text, View, StyleSheet, ViewStyle, TextStyle } from 'react-native'
+import { ReactNode } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  PressableProps,
+  StyleSheet,
+  Text,
+  View,
+  ViewStyle,
+} from "react-native";
 
-import { colors } from '@/theme/colors'
+import { colors } from "@/theme/colors";
 
-type Variant = 'primary' | 'outline' | 'secondary' | 'ghost' | 'danger'
-type Size = 'sm' | 'md' | 'lg'
+type Variant = "primary" | "outline" | "secondary" | "ghost" | "danger";
+type Size = "sm" | "md" | "lg";
 
 interface ButtonProps extends PressableProps {
-  variant?: Variant
-  size?: Size
-  title: string
-  icon?: ReactNode
-  loading?: boolean
-  disabled?: boolean
+  variant?: Variant;
+  size?: Size;
+  title: string;
+  icon?: ReactNode;
+  loading?: boolean;
+  disabled?: boolean;
 }
 
 export function Button({
-  variant = 'primary',
-  size = 'md',
+  variant = "primary",
+  size = "md",
   title,
   icon,
   loading,
@@ -38,7 +46,9 @@ export function Button({
       {...props}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'outline' ? colors.light.text : '#FFFFFF'} />
+        <ActivityIndicator
+          color={variant === "outline" ? colors.light.text : "#FFFFFF"}
+        />
       ) : (
         <View style={styles.content}>
           {icon}
@@ -46,19 +56,19 @@ export function Button({
         </View>
       )}
     </Pressable>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   base: {
     borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 10,
   },
   variant_primary: {
@@ -70,15 +80,15 @@ const styles = StyleSheet.create({
     borderColor: colors.light.border,
   },
   variant_secondary: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     borderWidth: 1.5,
     borderColor: colors.light.primary[500],
   },
   variant_ghost: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   variant_danger: {
-    backgroundColor: colors.light.semantic.error,
+    backgroundColor: colors.light.danger,
   },
   size_sm: {
     paddingHorizontal: 12,
@@ -96,7 +106,7 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   text: {
-    fontWeight: '600',
+    fontWeight: "600",
     fontSize: 16,
   },
   text_primary: {
@@ -114,4 +124,4 @@ const styles = StyleSheet.create({
   text_danger: {
     color: colors.light.neutral.white,
   },
-})
+});

@@ -36,7 +36,7 @@ export const shadows = {
     elevation: 10,
   },
   glow: {
-    shadowColor: '#208AEF',
+    shadowColor: '#6660E0',
     shadowOpacity: 0.25,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 4 },

@@ -1,6 +1,8 @@
 import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 
+import { colors } from '@/theme/colors'
+
 type Tone = 'default' | 'success' | 'warning' | 'danger' | 'info'
 
 interface BadgeProps {
@@ -28,37 +30,37 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   tone_default: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.light.surfaceAlt,
   },
   tone_success: {
-    backgroundColor: '#D1FAE5',
+    backgroundColor: colors.light.semantic.successBg,
   },
   tone_warning: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.light.semantic.warningBg,
   },
   tone_danger: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: colors.light.semantic.errorBg,
   },
   tone_info: {
-    backgroundColor: '#DBEAFE',
+    backgroundColor: colors.light.semantic.infoBg,
   },
   text: {
     fontSize: 12,
     fontWeight: '600',
   },
   text_default: {
-    color: '#374151',
+    color: colors.light.textAlt,
   },
   text_success: {
-    color: '#065F46',
+    color: colors.light.semantic.success,
   },
   text_warning: {
-    color: '#92400E',
+    color: colors.light.semantic.warning,
   },
   text_danger: {
-    color: '#991B1B',
+    color: colors.light.semantic.error,
   },
   text_info: {
-    color: '#1E40AF',
+    color: colors.light.semantic.info,
   },
 })

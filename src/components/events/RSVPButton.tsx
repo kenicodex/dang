@@ -1,6 +1,7 @@
 import React from 'react'
 import { View, Pressable, StyleSheet } from 'react-native'
 import { Text } from '@/components/ui/Text'
+import { colors } from '@/theme/colors'
 
 type RSVPStatus = 'yes' | 'no' | 'maybe' | 'unanswered'
 
@@ -62,7 +63,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   optActiveText: {
-    color: '#208AEF',
+    color: colors.light.primary[500],
     fontWeight: '700',
   },
 })

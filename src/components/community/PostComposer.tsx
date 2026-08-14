@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Text } from '@/components/ui/Text'
 import { Avatar } from '@/components/ui/Avatar'
+import { colors } from '@/theme/colors'
 
 interface PostComposerProps {
   onSubmit?: (content: string, isAnonymous: boolean) => void
@@ -95,15 +96,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.light.surfaceAlt,
   },
   toggleActive: {
-    backgroundColor: '#208AEF',
+    backgroundColor: colors.light.primary[500],
   },
   toggleText: {
-    color: '#374151',
+    color: colors.light.textAlt,
   },
   toggleActiveText: {
-    color: '#FFFFFF',
+    color: colors.light.neutral.white,
   },
 })

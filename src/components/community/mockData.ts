@@ -1,5 +1,6 @@
 import type { Circle } from '@/types/circles'
-import type { Post } from '@/types/community'
+import type { Post, Reply } from '@/types/community'
+import { SPACE_POSTS } from './spaces.data'
 
 const now = new Date('2026-08-12T09:00:00Z')
 
@@ -175,3 +176,62 @@ export const MY_POSTS: Post[] = [
     updatedAt: now,
   },
 ]
+
+export function findPostById(id?: string): Post | undefined {
+  if (!id) return undefined
+  return (
+    FOR_YOU_POSTS.find(p => p.id === id) ??
+    MY_POSTS.find(p => p.id === id) ??
+    Object.values(SPACE_POSTS)
+      .flat()
+      .find(p => p.id === id)
+  )
+}
+
+function makeReply(reply: Omit<Reply, 'isAnonymous' | 'likeCount' | 'createdAt' | 'updatedAt'> & Partial<Reply>): Reply {
+  return {
+    isAnonymous: false,
+    likeCount: 0,
+    createdAt: now,
+    updatedAt: now,
+    ...reply,
+  }
+}
+
+export const POST_REPLIES: Record<string, Reply[]> = {
+  'wb-post-2': [
+    makeReply({
+      id: 'reply-1',
+      postId: 'wb-post-2',
+      author: { id: 'u5', displayName: 'Nkechi Okonkwo', handle: '@Nkech_!' },
+      content: "This is such a good reminder — I switched my portfolio to ESG funds last year and haven't looked back.",
+      likeCount: 24,
+      hasLiked: true,
+      timeAgo: '45m',
+      replies: [
+        makeReply({
+          id: 'reply-1-1',
+          postId: 'wb-post-2',
+          author: { id: 'u1', displayName: 'Aisha Aminu', handle: '@aishaa' },
+          content: 'Same here! Perseverance and patience made all the difference for my returns.',
+          likeCount: 6,
+          hasLiked: true,
+          timeAgo: '33m',
+        }),
+      ],
+    }),
+    makeReply({
+      id: 'reply-2',
+      postId: 'wb-post-2',
+      isAnonymous: true,
+      anonymousHandle: 'Anonymous Sister',
+      content: 'Honestly still learning the basics — any beginner-friendly resources on green investing?',
+      likeCount: 9,
+      timeAgo: '20m',
+    }),
+  ],
+}
+
+export function getRepliesForPost(postId: string): Reply[] {
+  return POST_REPLIES[postId] ?? []
+}

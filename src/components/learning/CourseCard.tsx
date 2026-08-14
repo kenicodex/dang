@@ -3,6 +3,7 @@ import { View, Pressable, StyleSheet } from 'react-native'
 import { Card } from '@/components/ui/Card'
 import { Text } from '@/components/ui/Text'
 import { Badge } from '@/components/ui/Badge'
+import { colors } from '@/theme/colors'
 import type { Course } from '@/types/learning'
 
 interface CourseCardProps {
@@ -52,7 +53,7 @@ const styles = StyleSheet.create({
   },
   cover: {
     height: 140,
-    backgroundColor: '#E6F4FE',
+    backgroundColor: colors.light.primary[50],
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -93,7 +94,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#208AEF',
+    backgroundColor: colors.light.primary[500],
     borderRadius: 3,
   },
   meta: {

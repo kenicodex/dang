@@ -2,6 +2,7 @@ import React from 'react'
 import { View, Pressable, StyleSheet } from 'react-native'
 import { Text } from '@/components/ui/Text'
 import { Badge } from '@/components/ui/Badge'
+import { colors } from '@/theme/colors'
 import type { Lesson } from '@/types/learning'
 
 interface LessonProgressProps {
@@ -62,7 +63,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#208AEF',
+    backgroundColor: colors.light.primary[500],
     alignItems: 'center',
     justifyContent: 'center',
   },

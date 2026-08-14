@@ -2,6 +2,7 @@ import React from 'react'
 import { View, Pressable, StyleSheet } from 'react-native'
 import { Text } from '@/components/ui/Text'
 import { Badge } from '@/components/ui/Badge'
+import { colors } from '@/theme/colors'
 import type { Channel } from '@/types/community'
 
 interface ChannelCardProps {
@@ -62,7 +63,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   itemActive: {
-    backgroundColor: '#E6F4FE',
+    backgroundColor: colors.light.primary[50],
   },
   emoji: {
     fontSize: 20,

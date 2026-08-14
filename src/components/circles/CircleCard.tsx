@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/Card'
 import { Text } from '@/components/ui/Text'
 import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
+import { colors } from '@/theme/colors'
 import type { Circle } from '@/types/circles'
 
 interface CircleCardProps {
@@ -54,7 +55,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 14,
-    backgroundColor: '#E6F4FE',
+    backgroundColor: colors.light.primary[50],
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -1,18 +1,26 @@
-import { ReactNode, useState } from 'react'
-import { Pressable, TextInput, TextInputProps, StyleSheet, View, ViewStyle, Text } from 'react-native'
-import { SymbolView } from 'expo-symbols'
+import { SymbolView } from "expo-symbols";
+import { ReactNode, useState } from "react";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  TextInputProps,
+  View,
+  ViewStyle,
+} from "react-native";
 
-import { colors } from '@/theme/colors'
+import { colors } from "@/theme/colors";
 
 interface InputProps extends TextInputProps {
-  label?: string
-  required?: boolean
-  error?: string
-  helperText?: string
-  containerStyle?: ViewStyle
-  leftIcon?: ReactNode
+  label?: string;
+  required?: boolean;
+  error?: string;
+  helperText?: string;
+  containerStyle?: ViewStyle;
+  leftIcon?: ReactNode;
   /** Renders an eye / eye-slash toggle inside the field; pairs with secureTextEntry. */
-  showPasswordToggle?: boolean
+  showPasswordToggle?: boolean;
 }
 
 export function Input({
@@ -29,8 +37,8 @@ export function Input({
   secureTextEntry,
   ...props
 }: InputProps) {
-  const [isFocused, setIsFocused] = useState(false)
-  const [revealed, setRevealed] = useState(false)
+  const [isFocused, setIsFocused] = useState(false);
+  const [revealed, setRevealed] = useState(false);
 
   return (
     <View style={containerStyle}>
@@ -53,23 +61,23 @@ export function Input({
           placeholderTextColor={colors.light.textSoft}
           secureTextEntry={showPasswordToggle ? !revealed : secureTextEntry}
           onFocus={(e) => {
-            setIsFocused(true)
-            onFocus?.(e)
+            setIsFocused(true);
+            onFocus?.(e);
           }}
           onBlur={(e) => {
-            setIsFocused(false)
-            onBlur?.(e)
+            setIsFocused(false);
+            onBlur?.(e);
           }}
           {...props}
         />
         {showPasswordToggle && (
           <Pressable
             hitSlop={8}
-            onPress={() => setRevealed(v => !v)}
+            onPress={() => setRevealed((v) => !v)}
             style={styles.toggle}
           >
             <SymbolView
-              name={revealed ? 'eye.slash' : 'eye'}
+              name={revealed ? "eye.slash" : "eye"}
               size={18}
               tintColor={colors.light.textSoft}
             />
@@ -82,22 +90,22 @@ export function Input({
         </Text>
       )}
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.light.textAlt,
     marginBottom: 8,
   },
   required: {
-    color: colors.light.semantic.error,
+    color: colors.light.danger,
   },
   field: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1.5,
     borderColor: colors.light.border,
     borderRadius: 16,
@@ -107,7 +115,7 @@ const styles = StyleSheet.create({
     borderColor: colors.light.primary[500],
   },
   fieldError: {
-    borderColor: colors.light.semantic.error,
+    borderColor: colors.light.danger,
   },
   leftIcon: {
     paddingLeft: 16,
@@ -131,6 +139,6 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   errorText: {
-    color: colors.light.semantic.error,
+    color: colors.light.danger,
   },
-})
+});

@@ -5,6 +5,7 @@ export interface Channel extends Auditable {
   name: string
   slug: string
   emoji?: string
+  coverImageUrl?: string
   description: string
   isPrivate: boolean
   memberCount: number
@@ -15,6 +16,16 @@ export interface Channel extends Auditable {
   tagline?: string
   memberAvatars?: string[]
   guidelines?: string[]
+  moderator?: ChannelMember
+  members?: ChannelMember[]
+}
+
+export interface ChannelMember {
+  id: string
+  displayName: string
+  handle: string
+  initials: string
+  bio?: string
 }
 
 export type PostModerationStatus = 'pending' | 'approved' | 'rejected'

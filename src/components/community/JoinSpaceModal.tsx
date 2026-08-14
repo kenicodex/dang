@@ -1,5 +1,6 @@
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { SymbolView } from 'expo-symbols'
+import { GlassView } from 'expo-glass-effect'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { Text } from '@/components/ui/Text'
@@ -26,11 +27,13 @@ export function JoinSpaceModal({ visible, space, onClose, onAgree }: JoinSpaceMo
   const dotColor = CATEGORY_STYLE[space.category ?? '']?.gradient[1] ?? colors.light.primary[500]
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <Pressable style={styles.closeButton} onPress={onClose} hitSlop={12}>
-          <SymbolView name="xmark" size={16} tintColor={colors.light.text} />
-        </Pressable>
+        <GlassView style={styles.closeButtonGlass} glassEffectStyle="regular">
+          <Pressable style={styles.closeButton} onPress={onClose} hitSlop={12}>
+            <SymbolView name="xmark" size={16} tintColor={colors.light.text} />
+          </Pressable>
+        </GlassView>
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <Text style={styles.eyebrow}>Review and agree to the rules for</Text>
@@ -81,17 +84,22 @@ export function JoinSpaceModal({ visible, space, onClose, onAgree }: JoinSpaceMo
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.light.bg,
+    backgroundColor: colors.light.bgSoft,
   },
-  closeButton: {
+  closeButtonGlass: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.light.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.5)',
     marginLeft: 20,
     marginTop: 8,
+  },
+  closeButton: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     paddingHorizontal: 20,

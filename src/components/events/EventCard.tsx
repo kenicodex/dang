@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/Card'
 import { Text } from '@/components/ui/Text'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { colors } from '@/theme/colors'
 import type { Event } from '@/types/events'
 
 interface EventCardProps {
@@ -56,7 +57,7 @@ const styles = StyleSheet.create({
   },
   dateBox: {
     width: 72,
-    backgroundColor: '#208AEF',
+    backgroundColor: colors.light.primary[500],
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,

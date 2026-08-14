@@ -61,7 +61,7 @@ export default function CreatePostScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <Pressable style={styles.iconButton} onPress={() => router.back()}>
           <SymbolView name="chevron.left" size={18} tintColor={colors.light.text} />
@@ -96,15 +96,6 @@ export default function CreatePostScreen() {
           />
         </View>
 
-        <RichTextToolbar length={content.length} maxLength={MAX_LENGTH} onFormat={applyFormat} />
-
-        <View style={styles.iconRow}>
-          <RowIconButton icon="photo" />
-          <RowIconButton icon="camera" />
-          <RowIconButton icon="at" onPress={() => setContent(c => `${c}@`)} />
-          <RowIconButton icon="number" onPress={() => setContent(c => `${c}#`)} />
-        </View>
-
         <Pressable style={styles.anonymousRow} onPress={() => setIsAnonymous(v => !v)}>
           <View style={styles.anonymousText}>
             <Text style={styles.anonymousTitle}>Post Anonymously</Text>
@@ -113,6 +104,17 @@ export default function CreatePostScreen() {
           <Toggle value={isAnonymous} onChange={setIsAnonymous} />
         </Pressable>
       </ScrollView>
+
+      <View style={styles.footer}>
+        <RichTextToolbar length={content.length} maxLength={MAX_LENGTH} onFormat={applyFormat} />
+
+        <View style={styles.iconRow}>
+          <RowIconButton icon="photo" />
+          <RowIconButton icon="camera" />
+          <RowIconButton icon="at" onPress={() => setContent(c => `${c}@`)} />
+          <RowIconButton icon="number" onPress={() => setContent(c => `${c}#`)} />
+        </View>
+      </View>
 
       <AudienceSheet
         visible={audienceVisible}
@@ -184,8 +186,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   content: {
+    flexGrow: 1,
     paddingHorizontal: 20,
-    paddingBottom: 40,
+    paddingBottom: 20,
     gap: 16,
   },
   audienceRow: {
@@ -203,6 +206,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   textBox: {
+    flex: 1,
     borderWidth: 1.5,
     borderColor: colors.light.border,
     borderRadius: 16,
@@ -216,9 +220,18 @@ const styles = StyleSheet.create({
     color: colors.light.text,
     textAlignVertical: 'top',
   },
+  footer: {
+    paddingHorizontal: 20,
+    paddingTop: 4,
+    paddingBottom: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.light.border,
+  },
   iconRow: {
     flexDirection: 'row',
+    justifyContent: 'flex-start',
     gap: 12,
+    marginTop: 4,
   },
   rowIconButton: {
     width: 40,

@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/Card'
 import { Text } from '@/components/ui/Text'
 import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
+import { colors } from '@/theme/colors'
 import type { Thread } from '@/types/community'
 
 interface ThreadCardProps {
@@ -57,7 +58,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   preview: {
-    color: '#6B7280',
+    color: colors.light.textMuted,
     marginBottom: 12,
   },
   footer: {
@@ -72,11 +73,11 @@ const styles = StyleSheet.create({
   stackAvatar: {
     marginLeft: -6,
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: colors.light.surface,
   },
   moreCount: {
     marginLeft: 4,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.light.surfaceAlt,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 8,
