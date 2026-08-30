@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'expo-router'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -27,10 +27,10 @@ export default function SpaceSearchScreen() {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.header}>
         <Pressable hitSlop={12} onPress={() => router.back()}>
-          <SymbolView name="chevron.left" size={20} tintColor={colors.light.text} />
+          <Icon name="chevron.left" size={20} tintColor={colors.light.text} />
         </Pressable>
         <View style={styles.searchField}>
-          <SymbolView name="magnifyingglass" size={16} tintColor={colors.light.textSoft} />
+          <Icon name="magnifyingglass" size={16} tintColor={colors.light.textSoft} />
           <TextInput
             value={query}
             onChangeText={setQuery}

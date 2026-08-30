@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native'
-import { SymbolView, type SymbolViewProps } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
+import type { SymbolViewProps } from 'expo-symbols'
 
 import { Text } from '@/components/ui/Text'
 import { colors } from '@/theme/colors'
@@ -46,7 +47,7 @@ export function RichTextToolbar({ length, maxLength, onFormat }: RichTextToolbar
 function ToolButton({ icon, onPress }: { icon: SymbolViewProps['name']; onPress: () => void }) {
   return (
     <Pressable style={styles.toolButton} onPress={onPress} hitSlop={6}>
-      <SymbolView name={icon} size={16} tintColor={colors.light.textAlt} />
+      <Icon name={icon} size={16} tintColor={colors.light.textAlt} />
     </Pressable>
   )
 }

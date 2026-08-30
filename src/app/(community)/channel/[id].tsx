@@ -1,21 +1,22 @@
 import { useMemo, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { Text } from '@/components/ui/Text'
 import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
-import { Sheet } from '@/components/ui/Sheet'
+import { GlassView } from '@/components/ui/GlassView'
+import { Tabs } from '@/components/ui/Tabs'
 import { PostCard } from '@/components/community/PostCard'
-import { PostComposer } from '@/components/community/PostComposer'
 import { JoinSpaceModal } from '@/components/community/JoinSpaceModal'
+import { LeaveSpaceSheet } from '@/components/community/LeaveSpaceSheet'
 import { CATEGORY_STYLE, SPACES, SPACE_POSTS } from '@/components/community/spaces.data'
 import { useCommunityStore } from '@/store'
 import { colors } from '@/theme/colors'
-import type { ChannelMember, Post } from '@/types/community'
+import type { ChannelMember } from '@/types/community'
 
 type DetailTab = 'trending' | 'media' | 'about'
 
@@ -53,13 +54,14 @@ export default function SpaceDetailScreen() {
 
   const joinedSpaceIds = useCommunityStore(s => s.joinedSpaceIds)
   const joinSpace = useCommunityStore(s => s.joinSpace)
+  const leaveSpace = useCommunityStore(s => s.leaveSpace)
   const isJoined = !!space && joinedSpaceIds.includes(space.id)
 
   const [tab, setTab] = useState<DetailTab>('trending')
   const [rulesVisible, setRulesVisible] = useState(false)
-  const [composerVisible, setComposerVisible] = useState(false)
-  const [posts, setPosts] = useState<Post[]>(space ? SPACE_POSTS[space.id] ?? [] : [])
+  const [leaveVisible, setLeaveVisible] = useState(false)
   const [showAllMembers, setShowAllMembers] = useState(false)
+  const posts = space ? SPACE_POSTS[space.id] ?? [] : []
 
   if (!space) {
     return (
@@ -79,7 +81,7 @@ export default function SpaceDetailScreen() {
       setRulesVisible(true)
       return
     }
-    setComposerVisible(true)
+    router.push({ pathname: '/create-post', params: { slug: space.id } })
   }
 
   return (
@@ -87,12 +89,16 @@ export default function SpaceDetailScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <LinearGradient colors={style.gradient} style={styles.banner}>
           <SafeAreaView edges={['top']} style={styles.bannerBar}>
-            <Pressable style={styles.circleButton} onPress={() => router.back()}>
-              <SymbolView name="chevron.left" size={18} tintColor={colors.light.neutral.white} />
-            </Pressable>
-            <Pressable style={styles.circleButton} onPress={() => router.push('/(community)/search')}>
-              <SymbolView name="magnifyingglass" size={16} tintColor={colors.light.neutral.white} />
-            </Pressable>
+            <GlassView style={styles.circleButtonGlass} radius="full" glassEffectStyle="clear" isInteractive>
+              <Pressable style={styles.circleButtonInner} onPress={() => router.back()}>
+                <Icon name="chevron.left" size={18} tintColor={colors.light.neutral.white} />
+              </Pressable>
+            </GlassView>
+            <GlassView style={styles.circleButtonGlass} radius="full" glassEffectStyle="clear" isInteractive>
+              <Pressable style={styles.circleButtonInner} onPress={() => router.push('/(community)/search')}>
+                <Icon name="magnifyingglass" size={16} tintColor={colors.light.neutral.white} />
+              </Pressable>
+            </GlassView>
           </SafeAreaView>
           <Text style={styles.bannerEmoji}>{style.emoji}</Text>
         </LinearGradient>
@@ -123,7 +129,12 @@ export default function SpaceDetailScreen() {
           <View style={styles.actionsRow}>
             <Button title="Share" variant="outline" style={styles.actionButton} />
             {isJoined ? (
-              <Button title="Joined" variant="outline" style={styles.actionButton} />
+              <Button
+                title="Joined"
+                variant="outline"
+                style={styles.actionButton}
+                onPress={() => setLeaveVisible(true)}
+              />
             ) : (
               <Button
                 title="Join Space"
@@ -133,20 +144,16 @@ export default function SpaceDetailScreen() {
             )}
           </View>
 
-          <View style={styles.tabRow}>
-            <Pressable style={styles.tabItem} onPress={() => setTab('trending')}>
-              <Text style={[styles.tabLabel, tab === 'trending' && styles.tabLabelActive]}>Trending</Text>
-              {tab === 'trending' && <View style={styles.tabIndicator} />}
-            </Pressable>
-            <Pressable style={styles.tabItem} onPress={() => setTab('media')}>
-              <Text style={[styles.tabLabel, tab === 'media' && styles.tabLabelActive]}>Media</Text>
-              {tab === 'media' && <View style={styles.tabIndicator} />}
-            </Pressable>
-            <Pressable style={styles.tabItem} onPress={() => setTab('about')}>
-              <Text style={[styles.tabLabel, tab === 'about' && styles.tabLabelActive]}>About</Text>
-              {tab === 'about' && <View style={styles.tabIndicator} />}
-            </Pressable>
-          </View>
+          <Tabs
+            tabs={[
+              { value: 'trending', label: 'Trending' },
+              { value: 'media', label: 'Media' },
+              { value: 'about', label: 'About' },
+            ]}
+            value={tab}
+            onChange={setTab}
+            style={styles.tabRow}
+          />
 
           <View style={styles.tabContent}>
             {(tab === 'trending' || tab === 'media') &&
@@ -208,7 +215,7 @@ export default function SpaceDetailScreen() {
       </ScrollView>
 
       <Pressable style={styles.fab} onPress={onComposePress}>
-        <SymbolView name="plus" size={22} tintColor={colors.light.neutral.white} weight="bold" />
+        <Icon name="plus" size={22} tintColor={colors.light.neutral.white} weight="bold" />
       </Pressable>
 
       <JoinSpaceModal
@@ -221,32 +228,12 @@ export default function SpaceDetailScreen() {
         }}
       />
 
-      <Sheet visible={composerVisible} onClose={() => setComposerVisible(false)} title="New post">
-        <PostComposer
-          onSubmit={(content, isAnonymous) => {
-            setPosts(prev => [
-              {
-                id: `local-${prev.length + 1}`,
-                channelId: space.id,
-                channelName: space.name,
-                author: { id: 'me', displayName: 'You', handle: '@me' },
-                content,
-                isAnonymous,
-                isPinned: false,
-                likeCount: 0,
-                replyCount: 0,
-                repostCount: 0,
-                timeAgo: 'now',
-                moderationStatus: 'approved',
-                createdAt: new Date(),
-                updatedAt: new Date(),
-              },
-              ...prev,
-            ])
-            setComposerVisible(false)
-          }}
-        />
-      </Sheet>
+      <LeaveSpaceSheet
+        visible={leaveVisible}
+        spaceName={space.name}
+        onClose={() => setLeaveVisible(false)}
+        onConfirmLeave={() => leaveSpace(space.id)}
+      />
     </SafeAreaView>
   )
 }
@@ -270,11 +257,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
   },
-  circleButton: {
+  circleButtonGlass: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(0,0,0,0.25)',
+  },
+  circleButtonInner: {
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -346,31 +335,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.light.primary[500],
   },
   tabRow: {
-    flexDirection: 'row',
     marginTop: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.light.border,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingBottom: 12,
-  },
-  tabLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.light.textSoft,
-  },
-  tabLabelActive: {
-    color: colors.light.text,
-  },
-  tabIndicator: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 2,
-    backgroundColor: colors.light.primary[500],
   },
   tabContent: {
     paddingTop: 16,

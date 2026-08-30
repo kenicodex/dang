@@ -1,5 +1,5 @@
 import { ActivityIndicator, Pressable, StyleSheet } from 'react-native'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 
 import { colors } from '@/theme/colors'
 
@@ -19,7 +19,7 @@ export function NextFab({ onPress, disabled, loading }: NextFabProps) {
       {loading ? (
         <ActivityIndicator color={colors.light.neutral.white} />
       ) : (
-        <SymbolView name="chevron.right" size={20} tintColor={colors.light.neutral.white} weight="semibold" />
+        <Icon name="chevron.right" size={20} tintColor={colors.light.neutral.white} weight="semibold" />
       )}
     </Pressable>
   )

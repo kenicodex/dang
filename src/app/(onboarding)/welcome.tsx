@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 import { Pressable, StyleSheet, View } from 'react-native'
 
 import { Text } from '@/components/ui/Text'
@@ -56,7 +56,7 @@ export default function WelcomeStepScreen() {
             <Text style={styles.avatarInitial}>{FIRST_NAME.charAt(0)}</Text>
           </View>
           <View style={styles.verifiedBadge}>
-            <SymbolView name="checkmark" size={12} tintColor={colors.light.neutral.white} weight="bold" />
+            <Icon name="checkmark" size={12} tintColor={colors.light.neutral.white} weight="bold" />
           </View>
         </View>
 
@@ -95,7 +95,7 @@ export default function WelcomeStepScreen() {
                 </View>
                 <Text style={styles.rowSubtitle}>{step.subtitle}</Text>
               </View>
-              <SymbolView name="chevron.right" size={16} tintColor={colors.light.textSoft} />
+              <Icon name="chevron.right" size={16} tintColor={colors.light.textSoft} />
             </Pressable>
           ))}
         </View>

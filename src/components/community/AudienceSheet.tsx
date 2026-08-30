@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 
 import { Sheet } from '@/components/ui/Sheet'
 import { Text } from '@/components/ui/Text'
@@ -25,7 +25,7 @@ export function AudienceSheet({ visible, onClose, communities, selectedId, onSel
         onPress={() => onSelect(ALL_SISTERS)}
         icon={
           <View style={styles.allSistersIcon}>
-            <SymbolView name="person.2.fill" size={18} tintColor={colors.light.primary[500]} />
+            <Icon name="person.2.fill" size={18} tintColor={colors.light.primary[500]} />
           </View>
         }
         title="All Sisters"

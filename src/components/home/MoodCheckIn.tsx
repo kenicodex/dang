@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 
 import { Card } from '@/components/ui/Card'
 import { Text } from '@/components/ui/Text'
@@ -26,7 +26,7 @@ export function MoodCheckIn({ points = 5, onCheckIn }: MoodCheckInProps) {
       <Card style={styles.card}>
         <View style={styles.confirmedRow}>
           <View style={styles.leftRow}>
-            <SymbolView name="checkmark.circle.fill" size={20} tintColor={colors.light.tertiary[600]} />
+            <Icon name="checkmark.circle.fill" size={20} tintColor={colors.light.tertiary[600]} />
             <Text style={styles.confirmedText}>checked in today</Text>
           </View>
           <View style={styles.pointsBadge}>

@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 
 import { Card } from '@/components/ui/Card'
 import { Text } from '@/components/ui/Text'
@@ -40,7 +40,7 @@ export function StreakCard({ days, todayIndex, points = 15 }: StreakCardProps) {
               ]}
             >
               {days[i] ? (
-                <SymbolView name="checkmark" size={13} tintColor={colors.light.neutral.white} weight="bold" />
+                <Icon name="checkmark" size={13} tintColor={colors.light.neutral.white} weight="bold" />
               ) : (
                 <Text style={styles.dotIndex}>{i + 1}</Text>
               )}

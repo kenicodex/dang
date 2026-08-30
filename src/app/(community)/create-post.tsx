@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native'
-import { router } from 'expo-router'
-import { SymbolView, type SymbolViewProps } from 'expo-symbols'
+import { router, useLocalSearchParams } from 'expo-router'
+import { Icon } from '@/components/ui/Icon'
+import type { SymbolViewProps } from 'expo-symbols'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { Text } from '@/components/ui/Text'
@@ -30,9 +31,12 @@ const PLACEHOLDER_TEXT: Partial<Record<TextFormat, string>> = {
 }
 
 export default function CreatePostScreen() {
+  const { slug } = useLocalSearchParams<{ slug?: string }>()
   const [content, setContent] = useState('')
   const [selection, setSelection] = useState({ start: 0, end: 0 })
-  const [communityId, setCommunityId] = useState(MOCK_COMMUNITIES[0]?.id ?? ALL_SISTERS)
+  const [communityId, setCommunityId] = useState(
+    MOCK_COMMUNITIES.find(c => c.slug === slug)?.id ?? MOCK_COMMUNITIES[0]?.id ?? ALL_SISTERS,
+  )
   const [audienceVisible, setAudienceVisible] = useState(false)
   const [isAnonymous, setIsAnonymous] = useState(false)
 
@@ -64,7 +68,7 @@ export default function CreatePostScreen() {
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <Pressable style={styles.iconButton} onPress={() => router.back()}>
-          <SymbolView name="chevron.left" size={18} tintColor={colors.light.text} />
+          <Icon name="chevron.left" size={18} tintColor={colors.light.text} />
         </Pressable>
         <Text variant="h3">Create Post</Text>
         <Pressable
@@ -80,7 +84,7 @@ export default function CreatePostScreen() {
         <Pressable style={styles.audienceRow} onPress={() => setAudienceVisible(true)}>
           <Text style={styles.audienceLabel}>Posting in:</Text>
           <Text style={styles.audienceValue}>{audienceLabel}</Text>
-          <SymbolView name="chevron.down" size={12} tintColor={colors.light.primary[500]} />
+          <Icon name="chevron.down" size={12} tintColor={colors.light.primary[500]} />
         </Pressable>
 
         <View style={styles.textBox}>
@@ -133,7 +137,7 @@ export default function CreatePostScreen() {
 function RowIconButton({ icon, onPress }: { icon: SymbolViewProps['name']; onPress?: () => void }) {
   return (
     <Pressable style={styles.rowIconButton} onPress={onPress}>
-      <SymbolView name={icon} size={18} tintColor={colors.light.textAlt} />
+      <Icon name={icon} size={18} tintColor={colors.light.textAlt} />
     </Pressable>
   )
 }

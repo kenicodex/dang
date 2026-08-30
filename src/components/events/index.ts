@@ -1,3 +1,7 @@
 export * from './EventCard'
+export * from './FeaturedEventCard'
+export * from './TicketSheet'
+export * from './MyEventsView'
 export * from './RSVPButton'
 export * from './LiveRoomHeader'
+export * from './events.data'

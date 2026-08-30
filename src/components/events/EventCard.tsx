@@ -1,100 +1,204 @@
-import React from 'react'
-import { View, Pressable, StyleSheet } from 'react-native'
-import { Card } from '@/components/ui/Card'
+import { Image } from 'expo-image'
+import { Pressable, StyleSheet, View } from 'react-native'
+import { Icon } from '@/components/ui/Icon'
+
 import { Text } from '@/components/ui/Text'
-import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { colors } from '@/theme/colors'
+import { shadows } from '@/theme/shadows'
+import { seatsUrgent } from './events.data'
 import type { Event } from '@/types/events'
 
 interface EventCardProps {
   event: Event
+  saved?: boolean
   onPress?: () => void
+  onToggleSave?: () => void
   onRSVP?: () => void
 }
 
-export function EventCard({ event, onPress, onRSVP }: EventCardProps) {
+export function EventCard({ event, saved, onPress, onToggleSave, onRSVP }: EventCardProps) {
+  const urgent = seatsUrgent(event)
+
   return (
-    <Pressable onPress={onPress}>
-      <Card style={styles.card}>
-        <View style={styles.dateBox}>
-          <Text style={styles.dateMonth}>{event.month}</Text>
-          <Text style={styles.dateDay}>{event.day}</Text>
-        </View>
-        <View style={styles.body}>
-          <View style={styles.tagRow}>
-            {event.isVirtual && <Badge label="Virtual" tone="info" />}
-            {event.type && <Badge label={event.type} tone="default" />}
+    <Pressable style={styles.card} onPress={onPress}>
+      <View style={styles.imageWrap}>
+        <Image source={{ uri: event.coverUrl }} style={styles.image} contentFit="cover" />
+
+        <View style={styles.topRow}>
+          <View style={styles.badgeRow}>
+            {event.category && (
+              <View style={styles.categoryBadge}>
+                <Text style={styles.categoryBadgeText}>{event.category}</Text>
+              </View>
+            )}
+            {event.isVirtual && (
+              <View style={styles.virtualBadge}>
+                <Icon name="video.fill" size={11} tintColor={colors.light.neutral.white} />
+                <Text style={styles.virtualBadgeText}>Virtual</Text>
+              </View>
+            )}
           </View>
-          <Text variant="h3" style={styles.title}>{event.title}</Text>
-          <Text variant="caption" style={styles.time}>{event.time}</Text>
-          <Text variant="caption" style={styles.location}>
-            {event.isVirtual ? '🔗 In-Platform Room' : `📍 ${event.venue}`}
-          </Text>
-          <View style={styles.footer}>
-            <Text variant="caption">
-              👥 {event.attendeeCount || 0} going
-            </Text>
-            <Button
-              title={event.rsvpStatus === 'yes' ? '✓ Going' : 'RSVP'}
-              variant={event.rsvpStatus === 'yes' ? 'secondary' : 'primary'}
-              size="sm"
-              onPress={onRSVP}
+          <Pressable style={styles.saveButton} onPress={onToggleSave} hitSlop={8}>
+            <Icon
+              name={saved ? 'bookmark.fill' : 'bookmark'}
+              size={14}
+              tintColor={colors.light.neutral.white}
             />
-          </View>
+          </Pressable>
         </View>
-      </Card>
+
+        {event.seatsRemaining != null && (
+          <View style={styles.seatsRow}>
+            <View style={[styles.seatsDot, { backgroundColor: urgent ? '#F87171' : '#34D399' }]} />
+            <Text style={styles.seatsText}>{event.seatsRemaining} seats left</Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.body}>
+        <Text style={styles.title} numberOfLines={2}>
+          {event.title}
+        </Text>
+
+        <View style={styles.metaRow}>
+          <Icon name="calendar" size={13} tintColor={colors.light.primary[500]} />
+          <Text style={styles.metaText}>
+            {event.date} · {event.time}
+          </Text>
+        </View>
+        <View style={styles.metaRow}>
+          <Icon name="mappin" size={13} tintColor={colors.light.primary[500]} />
+          <Text style={styles.metaText}>{event.isVirtual ? 'Virtual' : event.venue}</Text>
+        </View>
+        {event.host && (
+          <View style={styles.metaRow}>
+            <Icon name="person.2" size={13} tintColor={colors.light.primary[500]} />
+            <Text style={styles.metaText}>{event.host}</Text>
+          </View>
+        )}
+
+        <View style={styles.footer}>
+          <Text style={[styles.price, event.priceLabel === 'Free' && styles.priceFree]}>
+            {event.priceLabel ?? 'Free'}
+          </Text>
+          <Button title="RSVP" size="sm" onPress={onRSVP} style={styles.rsvpButton} />
+        </View>
+      </View>
     </Pressable>
   )
 }
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: 'row',
-    marginBottom: 12,
-    padding: 0,
+    backgroundColor: colors.light.surface,
+    borderRadius: 20,
     overflow: 'hidden',
+    marginBottom: 16,
+    ...shadows.sm,
   },
-  dateBox: {
-    width: 72,
-    backgroundColor: colors.light.primary[500],
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
+  imageWrap: {
+    height: 170,
   },
-  dateMonth: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
+  image: {
+    ...StyleSheet.absoluteFillObject,
   },
-  dateDay: {
-    color: '#FFFFFF',
-    fontSize: 28,
-    fontWeight: '900',
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    padding: 12,
   },
-  body: {
-    flex: 1,
-    padding: 14,
-  },
-  tagRow: {
+  badgeRow: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 8,
+  },
+  categoryBadge: {
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+  categoryBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.light.neutral.white,
+  },
+  virtualBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.light.primary[500],
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+  virtualBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.light.neutral.white,
+  },
+  saveButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  seatsRow: {
+    position: 'absolute',
+    left: 12,
+    bottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  seatsDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+  },
+  seatsText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.light.neutral.white,
+  },
+  body: {
+    padding: 16,
   },
   title: {
-    fontSize: 16,
-    marginBottom: 4,
+    fontSize: 17,
+    fontWeight: '700',
+    color: colors.light.text,
+    marginBottom: 10,
   },
-  time: {
-    marginBottom: 2,
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
   },
-  location: {
-    marginBottom: 12,
+  metaText: {
+    fontSize: 13,
+    color: colors.light.textMuted,
   },
   footer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  price: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.light.text,
+  },
+  priceFree: {
+    color: colors.light.semantic.success,
+  },
+  rsvpButton: {
+    borderRadius: 999,
+    paddingHorizontal: 20,
   },
 })

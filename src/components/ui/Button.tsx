@@ -5,6 +5,7 @@ import {
   PressableProps,
   StyleSheet,
   Text,
+  TextStyle,
   View,
   ViewStyle,
 } from "react-native";
@@ -21,6 +22,8 @@ interface ButtonProps extends PressableProps {
   icon?: ReactNode;
   loading?: boolean;
   disabled?: boolean;
+  /** Overrides the label color/weight — for one-off tinted buttons that don't match a variant. */
+  textStyle?: TextStyle;
 }
 
 export function Button({
@@ -31,6 +34,7 @@ export function Button({
   loading,
   disabled,
   style,
+  textStyle,
   ...props
 }: ButtonProps) {
   return (
@@ -52,7 +56,7 @@ export function Button({
       ) : (
         <View style={styles.content}>
           {icon}
-          <Text style={[styles.text, styles[`text_${variant}`]]}>{title}</Text>
+          <Text style={[styles.text, styles[`text_${variant}`], textStyle]}>{title}</Text>
         </View>
       )}
     </Pressable>

@@ -1,4 +1,4 @@
-import { SymbolView } from "expo-symbols";
+import { Icon } from "@/components/ui/Icon";
 import { ReactNode, useState } from "react";
 import {
   Pressable,
@@ -76,7 +76,7 @@ export function Input({
             onPress={() => setRevealed((v) => !v)}
             style={styles.toggle}
           >
-            <SymbolView
+            <Icon
               name={revealed ? "eye.slash" : "eye"}
               size={18}
               tintColor={colors.light.textSoft}

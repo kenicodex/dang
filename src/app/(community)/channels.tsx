@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { SymbolView } from "expo-symbols";
+import { Icon } from "@/components/ui/Icon";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -8,7 +8,8 @@ import { SpaceCard } from "@/components/community/SpaceCard";
 import { CATEGORIES, SPACES } from "@/components/community/spaces.data";
 import { Avatar } from "@/components/ui/Avatar";
 import { Text } from "@/components/ui/Text";
-import { useAuthStore, useCommunityStore } from "@/store";
+import { Tabs } from "@/components/ui/Tabs";
+import { useAuthStore, useCommunityStore, useUIStore } from "@/store";
 import { colors } from "@/theme/colors";
 
 type Tab = "discover" | "mine";
@@ -17,6 +18,7 @@ export default function SpacesScreen() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const joinedSpaceIds = useCommunityStore((s) => s.joinedSpaceIds);
+  const openDrawer = useUIStore((s) => s.openDrawer);
 
   const [tab, setTab] = useState<Tab>("discover");
   const [category, setCategory] = useState("All");
@@ -33,10 +35,12 @@ export default function SpacesScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <View style={styles.header}>
-        <Avatar
-          initials={(user?.displayName ?? "Me").slice(0, 2).toUpperCase()}
-          size="sm"
-        />
+        <Pressable onPress={openDrawer} hitSlop={8}>
+          <Avatar
+            initials={(user?.displayName ?? "Me").slice(0, 2).toUpperCase()}
+            size="sm"
+          />
+        </Pressable>
         <Text variant="h3" style={styles.title}>
           Spaces
         </Text>
@@ -44,7 +48,7 @@ export default function SpacesScreen() {
           style={styles.searchButton}
           onPress={() => router.push("/(community)/search")}
         >
-          <SymbolView
+          <Icon
             name="magnifyingglass"
             size={16}
             tintColor={colors.light.text}
@@ -52,27 +56,16 @@ export default function SpacesScreen() {
         </Pressable>
       </View>
 
-      <View style={styles.tabRow}>
-        <Pressable style={styles.tabItem} onPress={() => setTab("discover")}>
-          <Text
-            style={[
-              styles.tabLabel,
-              tab === "discover" && styles.tabLabelActive,
-            ]}
-          >
-            Discover
-          </Text>
-          {tab === "discover" && <View style={styles.tabIndicator} />}
-        </Pressable>
-        <Pressable style={styles.tabItem} onPress={() => setTab("mine")}>
-          <Text
-            style={[styles.tabLabel, tab === "mine" && styles.tabLabelActive]}
-          >
-            My spaces
-          </Text>
-          {tab === "mine" && <View style={styles.tabIndicator} />}
-        </Pressable>
-      </View>
+      <Tabs
+        tabs={[
+          { value: "discover", label: "Discover" },
+          { value: "mine", label: "My spaces" },
+        ]}
+        value={tab}
+        onChange={setTab}
+        indicatorColor={colors.light.secondary[500]}
+        style={styles.tabRow}
+      />
 
       {tab === "discover" && (
         <ScrollView
@@ -155,32 +148,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   tabRow: {
-    flexDirection: "row",
     paddingHorizontal: 20,
     marginTop: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.light.border,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: "center",
-    paddingBottom: 12,
-  },
-  tabLabel: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: colors.light.textSoft,
-  },
-  tabLabelActive: {
-    color: colors.light.text,
-  },
-  tabIndicator: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 2,
-    backgroundColor: colors.light.secondary[500],
   },
   categoryScroll: {
     marginTop: 14,

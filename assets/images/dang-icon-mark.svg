@@ -1,0 +1,13 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8B85EA"/>
+      <stop offset="1" stop-color="#2D25C0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <path fill-rule="evenodd" fill="#FFFFFF" d="
+    M280,260 H492 A252,252 0 0 1 492,764 H280 Z
+    M492,370 A142,142 0 0 1 492,654 Z
+  "/>
+</svg>

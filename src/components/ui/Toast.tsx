@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react'
-import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native'
+import { View, Text, StyleSheet, Animated, Dimensions, Platform } from 'react-native'
 
 type ToastType = 'success' | 'error' | 'info' | 'warning'
 
@@ -73,6 +73,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.15,
         shadowRadius: 8,
         shadowOffset: { width: 0, height: 4 },
+        elevation: 8,
       },
     }),
   },

@@ -1,4 +1,5 @@
-import { SymbolViewProps, SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
+import type { SymbolViewProps } from 'expo-symbols'
 import { StyleSheet, View } from 'react-native'
 
 import { Text } from '@/components/ui/Text'
@@ -12,7 +13,7 @@ interface FooterNoteProps {
 export function FooterNote({ icon, children }: FooterNoteProps) {
   return (
     <View style={styles.row}>
-      <SymbolView name={icon} size={14} tintColor={colors.light.textSoft} />
+      <Icon name={icon} size={14} tintColor={colors.light.textSoft} />
       <Text style={styles.text}>{children}</Text>
     </View>
   )

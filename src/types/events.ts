@@ -4,6 +4,30 @@ import type { MemberProfile } from './members'
 
 export type EventType = 'meetup' | 'workshop' | 'webinar' | 'retreat' | 'live-room' | 'conference'
 
+export interface EventAgendaItem {
+  time: string
+  label: string
+}
+
+export interface EventSpeaker {
+  name: string
+  role: string
+}
+
+export interface EventFAQ {
+  question: string
+  answer: string
+}
+
+export interface EventParticipant {
+  id: string
+  name: string
+  initials: string
+  color: string
+  avatarUrl?: string
+  isHost?: boolean
+}
+
 export interface Event extends Auditable {
   title: string
   slug: string
@@ -29,6 +53,26 @@ export interface Event extends Auditable {
   tierId?: string
   tags?: string[]
   recordingAvailable?: boolean
+  category?: string
+  isFeatured?: boolean
+  priceLabel?: string
+  priceAmount?: number
+  seatsRemaining?: number
+  durationLabel?: string
+  goingLabel?: string
+  agenda?: EventAgendaItem[]
+  speakers?: EventSpeaker[]
+  requirements?: string[]
+  faqs?: EventFAQ[]
+  processingFee?: number
+  transitLabel?: string
+  parkingLabel?: string
+  organizerName?: string
+  organizerPhone?: string
+  emergencyContactName?: string
+  emergencyContactPhone?: string
+  venuePhotos?: string[]
+  participants?: EventParticipant[]
 }
 
 export interface EventRSVP extends Auditable {

@@ -1,17 +1,13 @@
 import { useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { router } from 'expo-router'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { Avatar } from '@/components/ui/Avatar'
 import { Text } from '@/components/ui/Text'
-import {
-  FilterChips,
-  PostCard,
-  RejectionSheet,
-  type FilterChip,
-} from '@/components/community'
+import { FilterChips, Tabs, type FilterChip } from '@/components/ui'
+import { PostCard, RejectionSheet } from '@/components/community'
 import { FOR_YOU_POSTS, MY_POSTS } from '@/components/community/mockData'
 import { useAuthStore } from '@/store/useAuthStore'
 import { colors } from '@/theme/colors'
@@ -54,20 +50,19 @@ export default function FeedScreen() {
         <Avatar initials={firstName.slice(0, 2).toUpperCase()} size="sm" />
         <Text style={styles.streakEmoji}>🔥</Text>
         <Pressable style={styles.bellButton}>
-          <SymbolView name="bell" size={18} tintColor={colors.light.text} />
+          <Icon name="bell" size={18} tintColor={colors.light.text} />
         </Pressable>
       </View>
 
-      <View style={styles.tabsRow}>
-        <Pressable style={styles.tab} onPress={() => setTab('forYou')}>
-          <Text style={[styles.tabLabel, tab === 'forYou' && styles.tabLabelActive]}>For you</Text>
-          {tab === 'forYou' && <View style={styles.tabIndicator} />}
-        </Pressable>
-        <Pressable style={styles.tab} onPress={() => setTab('myPosts')}>
-          <Text style={[styles.tabLabel, tab === 'myPosts' && styles.tabLabelActive]}>My posts</Text>
-          {tab === 'myPosts' && <View style={styles.tabIndicator} />}
-        </Pressable>
-      </View>
+      <Tabs
+        tabs={[
+          { value: 'forYou', label: 'For you' },
+          { value: 'myPosts', label: 'My posts' },
+        ]}
+        value={tab}
+        onChange={setTab}
+        style={styles.tabsRow}
+      />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {tab === 'myPosts' && (
@@ -90,7 +85,7 @@ export default function FeedScreen() {
       </ScrollView>
 
       <Pressable style={styles.fab} onPress={() => router.push('/create-post')}>
-        <SymbolView name="plus" size={22} tintColor={colors.light.neutral.white} weight="bold" />
+        <Icon name="plus" size={22} tintColor={colors.light.neutral.white} weight="bold" />
       </Pressable>
 
       <RejectionSheet
@@ -134,31 +129,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tabsRow: {
-    flexDirection: 'row',
     paddingHorizontal: 20,
     marginTop: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.light.border,
-  },
-  tab: {
-    marginRight: 28,
-    paddingBottom: 12,
-  },
-  tabLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.light.textSoft,
-  },
-  tabLabelActive: {
-    color: colors.light.text,
-  },
-  tabIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 2,
-    backgroundColor: colors.light.primary[500],
   },
   content: {
     paddingHorizontal: 20,

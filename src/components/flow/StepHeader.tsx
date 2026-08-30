@@ -1,7 +1,7 @@
 import { ReactNode } from 'react'
 import { Pressable, View, StyleSheet } from 'react-native'
 import { Image } from 'expo-image'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 
 import { colors } from '@/theme/colors'
 
@@ -19,7 +19,7 @@ export function StepHeader({ onBack, progress, rightSlot }: StepHeaderProps) {
         <View style={styles.side}>
           {onBack && (
             <Pressable hitSlop={12} onPress={onBack}>
-              <SymbolView name="chevron.left" size={20} tintColor={colors.light.text} />
+              <Icon name="chevron.left" size={20} tintColor={colors.light.text} />
             </Pressable>
           )}
         </View>

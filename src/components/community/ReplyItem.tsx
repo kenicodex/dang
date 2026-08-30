@@ -1,6 +1,6 @@
 import React from 'react'
 import { View, Pressable, StyleSheet } from 'react-native'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 
 import { Text } from '@/components/ui/Text'
 import { Avatar } from '@/components/ui/Avatar'
@@ -43,7 +43,7 @@ export function ReplyItem({ reply, depth = 0, onLike, onReply, onRepost, onBookm
               {reply.timeAgo}
             </Text>
             <Pressable hitSlop={8} onPress={() => onMore?.(reply)}>
-              <SymbolView name="ellipsis" size={16} tintColor={colors.light.textSoft} />
+              <Icon name="ellipsis" size={16} tintColor={colors.light.textSoft} />
             </Pressable>
           </View>
 
@@ -54,7 +54,7 @@ export function ReplyItem({ reply, depth = 0, onLike, onReply, onRepost, onBookm
           <View style={styles.actions}>
             <View style={styles.actionsLeft}>
               <Pressable style={styles.action} onPress={() => onLike?.(reply)} hitSlop={6}>
-                <SymbolView
+                <Icon
                   name={reply.hasLiked ? 'heart.fill' : 'heart'}
                   size={16}
                   tintColor={reply.hasLiked ? colors.light.semantic.error : colors.light.textMuted}
@@ -66,7 +66,7 @@ export function ReplyItem({ reply, depth = 0, onLike, onReply, onRepost, onBookm
                 )}
               </Pressable>
               <Pressable style={styles.action} onPress={() => onReply?.(reply)} hitSlop={6}>
-                <SymbolView name="bubble.left" size={16} tintColor={colors.light.textMuted} />
+                <Icon name="bubble.left" size={16} tintColor={colors.light.textMuted} />
                 {nestedCount > 0 && (
                   <Text variant="caption" style={styles.actionCount}>
                     {nestedCount}
@@ -74,15 +74,15 @@ export function ReplyItem({ reply, depth = 0, onLike, onReply, onRepost, onBookm
                 )}
               </Pressable>
               <Pressable style={styles.action} onPress={() => onRepost?.(reply)} hitSlop={6}>
-                <SymbolView name="arrow.2.squarepath" size={16} tintColor={colors.light.textMuted} />
+                <Icon name="arrow.2.squarepath" size={16} tintColor={colors.light.textMuted} />
               </Pressable>
             </View>
             <View style={styles.actionsRight}>
               <Pressable hitSlop={6} onPress={() => onBookmark?.(reply)}>
-                <SymbolView name="bookmark" size={16} tintColor={colors.light.textMuted} />
+                <Icon name="bookmark" size={16} tintColor={colors.light.textMuted} />
               </Pressable>
               <Pressable hitSlop={6} onPress={() => onShare?.(reply)}>
-                <SymbolView name="paperplane" size={16} tintColor={colors.light.textMuted} />
+                <Icon name="paperplane" size={16} tintColor={colors.light.textMuted} />
               </Pressable>
             </View>
           </View>

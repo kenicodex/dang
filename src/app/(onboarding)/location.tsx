@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useRouter } from 'expo-router'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 import { StyleSheet, TextInput, View } from 'react-native'
 
 import { Text } from '@/components/ui/Text'
@@ -26,7 +26,7 @@ export default function LocationStepScreen() {
         </Text>
 
         <View style={styles.searchField}>
-          <SymbolView name="magnifyingglass" size={16} tintColor={colors.light.textSoft} />
+          <Icon name="magnifyingglass" size={16} tintColor={colors.light.textSoft} />
           <TextInput
             value={city}
             onChangeText={setCity}

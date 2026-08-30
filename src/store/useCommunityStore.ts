@@ -7,7 +7,7 @@ export interface CommunityState {
 }
 
 export const useCommunityStore = create<CommunityState>((set, get) => ({
-  joinedSpaceIds: [],
+  joinedSpaceIds: ['wealth-building', 'entrepreneurship', 'career-development'],
   joinSpace: id => {
     if (get().joinedSpaceIds.includes(id)) return
     set({ joinedSpaceIds: [...get().joinedSpaceIds, id] })

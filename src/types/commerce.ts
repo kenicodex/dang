@@ -12,6 +12,7 @@ export interface Product extends Auditable {
   emoji?: string
   imageUrl?: string
   price: number
+  compareAtPrice?: number
   currency: 'NGN' | 'GBP' | 'USD' | 'EUR'
   category: string
   tags?: string[]
@@ -50,4 +51,20 @@ export interface TesterInvite extends Auditable {
   voucherCode?: string
   feedbackSubmitted: boolean
   feedbackDeadline?: Date
+}
+
+export type TesterStatus = 'none' | 'pending' | 'selected' | 'rejected' | 'completed'
+
+export interface TesterApplication {
+  dropId: string
+  interests: string[]
+  skinType: string
+  deliveryAddress: string
+}
+
+export interface TesterFeedback {
+  dropId: string
+  rating: number
+  wouldBuy: 'yes' | 'maybe' | 'no'
+  comment?: string
 }

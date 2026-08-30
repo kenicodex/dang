@@ -1,5 +1,5 @@
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 import { GlassView } from 'expo-glass-effect'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -31,7 +31,7 @@ export function JoinSpaceModal({ visible, space, onClose, onAgree }: JoinSpaceMo
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <GlassView style={styles.closeButtonGlass} glassEffectStyle="regular">
           <Pressable style={styles.closeButton} onPress={onClose} hitSlop={12}>
-            <SymbolView name="xmark" size={16} tintColor={colors.light.text} />
+            <Icon name="xmark" size={16} tintColor={colors.light.text} />
           </Pressable>
         </GlassView>
 
@@ -53,7 +53,7 @@ export function JoinSpaceModal({ visible, space, onClose, onAgree }: JoinSpaceMo
             {PERKS.map(perk => (
               <View key={perk} style={styles.row}>
                 <View style={styles.checkBubble}>
-                  <SymbolView name="checkmark" size={11} tintColor={colors.light.primary[600]} weight="bold" />
+                  <Icon name="checkmark" size={11} tintColor={colors.light.primary[600]} weight="bold" />
                 </View>
                 <Text style={styles.rowText}>{perk}</Text>
               </View>
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: 'rgba(255,255,255,0.5)',
     marginLeft: 20,
-    marginTop: 8,
+    marginTop: 16,
   },
   closeButton: {
     width: '100%',
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 8,
+    paddingBottom: 24,
   },
   agreeButton: {
     borderRadius: 999,

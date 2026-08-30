@@ -5,7 +5,9 @@ export interface MemberProfile extends Auditable {
   handle: string
   avatarUrl?: string
   bio?: string
+  occupation?: string
   location?: string
+  coverImageUrl?: string
   interests: string[]
   joinedAt: Date
   isOnline: boolean
@@ -14,6 +16,12 @@ export interface MemberProfile extends Auditable {
   membershipTier: string
   faithStreak?: number
   circlesCount: number
+  isFollowing?: boolean
+  mutualFriendCount?: number
+  mutualFriendAvatars?: string[]
+  followerCount?: number
+  followingCount?: number
+  joinedSpaceIds?: string[]
 }
 
 export interface MemberMatch {

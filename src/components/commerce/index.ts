@@ -1,3 +1,5 @@
 export * from './DiscountBanner'
 export * from './DropCountdown'
 export * from './ProductCard'
+export * from './OutcomeScreen'
+export * from './lifestyle.data'

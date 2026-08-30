@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -38,7 +38,7 @@ export default function PostDetailScreen() {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <Pressable style={styles.iconButton} onPress={() => router.back()}>
-            <SymbolView name="chevron.left" size={18} tintColor={colors.light.text} />
+            <Icon name="chevron.left" size={18} tintColor={colors.light.text} />
           </Pressable>
           <Text variant="h3" style={styles.headerTitle}>
             Post
@@ -93,7 +93,7 @@ export default function PostDetailScreen() {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.header}>
         <Pressable style={styles.iconButton} onPress={() => router.back()}>
-          <SymbolView name="chevron.left" size={18} tintColor={colors.light.text} />
+          <Icon name="chevron.left" size={18} tintColor={colors.light.text} />
         </Pressable>
         <Text variant="h3" style={styles.headerTitle}>
           Post

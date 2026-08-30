@@ -1,6 +1,6 @@
 import React from 'react'
 import { View, Pressable, StyleSheet } from 'react-native'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 
 import { Card } from '@/components/ui/Card'
 import { Text } from '@/components/ui/Text'
@@ -68,7 +68,7 @@ export function PostCard({
             </View>
           </View>
           <Pressable hitSlop={8} onPress={onMore}>
-            <SymbolView name="ellipsis" size={18} tintColor={colors.light.textSoft} />
+            <Icon name="ellipsis" size={18} tintColor={colors.light.textSoft} />
           </Pressable>
         </View>
 
@@ -85,32 +85,40 @@ export function PostCard({
           <View style={styles.mediaPlaceholder} />
         )}
 
+        {post.attachments?.[0]?.type === 'video' && (
+          <View style={styles.videoPlaceholder}>
+            <View style={styles.playButton}>
+              <Icon name="play.fill" size={22} tintColor={colors.light.neutral.white} />
+            </View>
+          </View>
+        )}
+
         <View style={styles.actions}>
           <View style={styles.actionsLeft}>
             <Pressable style={styles.action} onPress={onLike} hitSlop={6}>
-              <SymbolView
+              <Icon
                 name={post.hasLiked ? 'heart.fill' : 'heart'}
                 size={18}
-                tintColor={colors.light.semantic.error}
+                tintColor={post.hasLiked ? colors.light.semantic.error : colors.light.textMuted}
               />
             </Pressable>
             <Pressable style={styles.action} onPress={onReply} hitSlop={6}>
-              <SymbolView name="bubble.left" size={18} tintColor={colors.light.textMuted} />
+              <Icon name="bubble.left" size={18} tintColor={colors.light.textMuted} />
             </Pressable>
             <Pressable style={styles.action} onPress={onRepost} hitSlop={6}>
-              <SymbolView name="arrow.2.squarepath" size={18} tintColor={colors.light.textMuted} />
+              <Icon name="arrow.2.squarepath" size={18} tintColor={colors.light.textMuted} />
             </Pressable>
           </View>
           <View style={styles.actionsRight}>
             <Pressable style={styles.action} onPress={onBookmark} hitSlop={6}>
-              <SymbolView
+              <Icon
                 name={post.hasBookmarked ? 'bookmark.fill' : 'bookmark'}
                 size={18}
-                tintColor={colors.light.textMuted}
+                tintColor={post.hasBookmarked ? colors.light.primary[500] : colors.light.textMuted}
               />
             </Pressable>
             <Pressable style={styles.action} onPress={onShare} hitSlop={6}>
-              <SymbolView name="paperplane" size={18} tintColor={colors.light.textMuted} />
+              <Icon name="paperplane" size={18} tintColor={colors.light.textMuted} />
             </Pressable>
           </View>
         </View>
@@ -178,6 +186,22 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: colors.light.surfaceAlt,
     marginBottom: 12,
+  },
+  videoPlaceholder: {
+    height: 220,
+    borderRadius: 12,
+    backgroundColor: colors.light.neutral.black,
+    marginBottom: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  playButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   actions: {
     flexDirection: 'row',

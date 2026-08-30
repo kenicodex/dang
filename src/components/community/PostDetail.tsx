@@ -1,7 +1,7 @@
 import React from 'react'
 import { View, Pressable, StyleSheet } from 'react-native'
 import { Image } from 'expo-image'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 
 import { Text } from '@/components/ui/Text'
 import { Avatar } from '@/components/ui/Avatar'
@@ -45,7 +45,7 @@ export function PostDetail({ post, onLike, onReply, onRepost, onBookmark, onShar
           <Text variant="caption">{post.timeAgo}</Text>
         </View>
         <Pressable hitSlop={8} onPress={onMore}>
-          <SymbolView name="ellipsis" size={18} tintColor={colors.light.textSoft} />
+          <Icon name="ellipsis" size={18} tintColor={colors.light.textSoft} />
         </Pressable>
       </View>
 
@@ -69,29 +69,29 @@ export function PostDetail({ post, onLike, onReply, onRepost, onBookmark, onShar
       <View style={styles.actions}>
         <View style={styles.actionsLeft}>
           <Pressable onPress={onLike} hitSlop={8}>
-            <SymbolView
+            <Icon
               name={post.hasLiked ? 'heart.fill' : 'heart'}
               size={22}
               tintColor={post.hasLiked ? colors.light.semantic.error : colors.light.text}
             />
           </Pressable>
           <Pressable onPress={onReply} hitSlop={8}>
-            <SymbolView name="bubble.left" size={22} tintColor={colors.light.text} />
+            <Icon name="bubble.left" size={22} tintColor={colors.light.text} />
           </Pressable>
           <Pressable onPress={onRepost} hitSlop={8}>
-            <SymbolView name="arrow.2.squarepath" size={22} tintColor={colors.light.text} />
+            <Icon name="arrow.2.squarepath" size={22} tintColor={colors.light.text} />
           </Pressable>
         </View>
         <View style={styles.actionsRight}>
           <Pressable hitSlop={8} onPress={onBookmark}>
-            <SymbolView
+            <Icon
               name={post.hasBookmarked ? 'bookmark.fill' : 'bookmark'}
               size={20}
               tintColor={colors.light.text}
             />
           </Pressable>
           <Pressable hitSlop={8} onPress={onShare}>
-            <SymbolView name="paperplane" size={20} tintColor={colors.light.text} />
+            <Icon name="paperplane" size={20} tintColor={colors.light.text} />
           </Pressable>
         </View>
       </View>

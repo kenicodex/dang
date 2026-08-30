@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useRouter } from 'expo-router'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 
 import { Text } from '@/components/ui/Text'
@@ -131,7 +131,7 @@ export default function PlanStepScreen() {
                   <Text style={styles.featureEmoji}>{feature.emoji}</Text>
                 </View>
                 <Text style={styles.featureLabel}>{feature.label}</Text>
-                <SymbolView
+                <Icon
                   name="checkmark.circle.fill"
                   size={18}
                   tintColor={colors.light.semantic.success}

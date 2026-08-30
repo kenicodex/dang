@@ -17,11 +17,13 @@ export default function RootLayout() {
         <Stack.Screen name="(onboarding)" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(account)" />
+        <Stack.Screen name="(chat)" />
         <Stack.Screen name="(circles)" />
         <Stack.Screen name="(community)" />
         <Stack.Screen name="(events)" />
         <Stack.Screen name="(founder)" />
         <Stack.Screen name="(learning)" />
+        <Stack.Screen name="(lifestyle)" />
       </Stack>
     </ThemeProvider>
   );

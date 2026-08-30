@@ -1,9 +1,11 @@
 import React, { useRef, useState } from 'react'
 import { Pressable, StyleSheet, TextInput, View } from 'react-native'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { Text } from '@/components/ui/Text'
 import { Avatar } from '@/components/ui/Avatar'
+import { GlassView } from '@/components/ui/GlassView'
 import { colors } from '@/theme/colors'
 
 interface ReplyComposerBarProps {
@@ -24,6 +26,7 @@ export function ReplyComposerBar({
   const [content, setContent] = useState('')
   const [isFocused, setIsFocused] = useState(false)
   const inputRef = useRef<TextInput>(null)
+  const insets = useSafeAreaInsets()
 
   const expanded = isFocused || content.length > 0 || !!replyingToName
   const canSubmit = content.trim().length > 0
@@ -36,36 +39,43 @@ export function ReplyComposerBar({
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: insets.bottom + 10 }]}>
       {expanded && replyingToName && (
         <View style={styles.replyingRow}>
           <Text variant="caption">
             Replying to <Text style={styles.replyingName}>{replyingToName}</Text>
           </Text>
           <Pressable hitSlop={8} onPress={onCancelReplyTo}>
-            <SymbolView name="xmark" size={12} tintColor={colors.light.textSoft} />
+            <Icon name="xmark" size={12} tintColor={colors.light.textSoft} />
           </Pressable>
         </View>
       )}
 
       <View style={styles.inputRow}>
         <Avatar uri={userAvatarUri} initials={userInitials} size="sm" />
-        <Pressable style={styles.fieldWrap} onPress={() => inputRef.current?.focus()}>
-          <TextInput
-            ref={inputRef}
-            style={styles.input}
-            value={content}
-            onChangeText={setContent}
-            placeholder="Join the conversation"
-            placeholderTextColor={colors.light.textSoft}
-            multiline
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-          />
-        </Pressable>
+        <GlassView
+          style={styles.fieldWrap}
+          radius="2xl"
+          glassEffectStyle="clear"
+          tintColor={colors.light.surfaceAlt}
+        >
+          <Pressable onPress={() => inputRef.current?.focus()}>
+            <TextInput
+              ref={inputRef}
+              style={styles.input}
+              value={content}
+              onChangeText={setContent}
+              placeholder="Join the conversation"
+              placeholderTextColor={colors.light.textSoft}
+              multiline
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+            />
+          </Pressable>
+        </GlassView>
         {!expanded && (
           <Pressable hitSlop={8} onPress={() => inputRef.current?.focus()}>
-            <SymbolView name="paperplane" size={20} tintColor={colors.light.textSoft} />
+            <Icon name="paperplane" size={20} tintColor={colors.light.textSoft} />
           </Pressable>
         )}
       </View>
@@ -74,13 +84,13 @@ export function ReplyComposerBar({
         <View style={styles.toolRow}>
           <View style={styles.toolIcons}>
             <Pressable hitSlop={6}>
-              <SymbolView name="photo" size={18} tintColor={colors.light.textAlt} />
+              <Icon name="photo" size={18} tintColor={colors.light.textAlt} />
             </Pressable>
             <Pressable hitSlop={6}>
-              <SymbolView name="camera" size={18} tintColor={colors.light.textAlt} />
+              <Icon name="camera" size={18} tintColor={colors.light.textAlt} />
             </Pressable>
             <Pressable hitSlop={6} onPress={() => setContent(c => `${c}@`)}>
-              <SymbolView name="at" size={18} tintColor={colors.light.textAlt} />
+              <Icon name="at" size={18} tintColor={colors.light.textAlt} />
             </Pressable>
           </View>
           <Pressable
@@ -103,7 +113,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.light.bg,
     paddingHorizontal: 16,
     paddingTop: 10,
-    paddingBottom: 10,
     gap: 10,
   },
   replyingRow: {
@@ -122,8 +131,6 @@ const styles = StyleSheet.create({
   },
   fieldWrap: {
     flex: 1,
-    backgroundColor: colors.light.surfaceAlt,
-    borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
     maxHeight: 100,

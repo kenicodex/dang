@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useRouter } from 'expo-router'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 import { Pressable, StyleSheet, View } from 'react-native'
 
 import { Input } from '@/components/ui/Input'
@@ -42,7 +42,7 @@ export default function PhoneSignUpScreen() {
           <Pressable style={styles.countryPill} onPress={() => setPickerVisible(true)}>
             <Text style={styles.flag}>{country.flag}</Text>
             <Text style={styles.countryCode}>{country.code}</Text>
-            <SymbolView name="chevron.down" size={12} tintColor={colors.light.textMuted} />
+            <Icon name="chevron.down" size={12} tintColor={colors.light.textMuted} />
           </Pressable>
           <Input
             containerStyle={styles.numberField}

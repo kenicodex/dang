@@ -19,12 +19,15 @@ export interface UIState {
   activeSheet: SheetState | null
   isOffline: boolean
   colorScheme: 'light' | 'dark' | 'system'
+  isDrawerOpen: boolean
   showToast: (message: string, type?: ToastType, duration?: number) => void
   dismissToast: (id: string) => void
   openSheet: (id: string) => void
   closeSheet: () => void
   setOffline: (offline: boolean) => void
   setColorScheme: (scheme: UIState['colorScheme']) => void
+  openDrawer: () => void
+  closeDrawer: () => void
 }
 
 export const useUIStore = create<UIState>((set, get) => ({
@@ -32,6 +35,7 @@ export const useUIStore = create<UIState>((set, get) => ({
   activeSheet: null,
   isOffline: false,
   colorScheme: 'system',
+  isDrawerOpen: false,
   showToast: (message, type = 'info', duration = 3000) => {
     const id = Math.random().toString(36).slice(2)
     set({ toasts: [...get().toasts, { id, message, type, duration }] })
@@ -46,4 +50,6 @@ export const useUIStore = create<UIState>((set, get) => ({
   closeSheet: () => set({ activeSheet: null }),
   setOffline: isOffline => set({ isOffline }),
   setColorScheme: colorScheme => set({ colorScheme }),
+  openDrawer: () => set({ isDrawerOpen: true }),
+  closeDrawer: () => set({ isDrawerOpen: false }),
 }))

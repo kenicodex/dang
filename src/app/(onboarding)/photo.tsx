@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useRouter } from 'expo-router'
 import { Image } from 'expo-image'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 import { Pressable, StyleSheet, View } from 'react-native'
 
 import { Text } from '@/components/ui/Text'
@@ -40,11 +40,11 @@ export default function PhotoStepScreen() {
             {photoUri ? (
               <Image source={{ uri: photoUri }} style={styles.avatarImage} contentFit="cover" />
             ) : (
-              <SymbolView name="person.fill" size={40} tintColor={colors.light.primary[300]} />
+              <Icon name="person.fill" size={40} tintColor={colors.light.primary[300]} />
             )}
           </Pressable>
           <Pressable style={styles.addBadge} onPress={() => setPhotoUri(photoUri)}>
-            <SymbolView name="plus" size={16} tintColor={colors.light.neutral.white} weight="bold" />
+            <Icon name="plus" size={16} tintColor={colors.light.neutral.white} weight="bold" />
           </Pressable>
         </View>
 

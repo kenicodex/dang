@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 
 import { Text } from '@/components/ui/Text'
 import { colors } from '@/theme/colors'
@@ -40,7 +40,7 @@ export function PrayerBackground() {
         end={{ x: 0.65, y: 0.55 }}
         style={StyleSheet.absoluteFill}
       />
-      <SymbolView name="leaf.fill" size={220} tintColor="rgba(255,255,255,0.06)" style={styles.leaf} />
+      <Icon name="leaf.fill" size={220} tintColor="rgba(255,255,255,0.06)" style={styles.leaf} />
       <LinearGradient colors={['rgba(0,0,0,0.05)', 'rgba(0,0,0,0.8)']} style={StyleSheet.absoluteFill} />
     </>
   )
@@ -50,19 +50,19 @@ export function PrayerActions({ likeCount, replyCount }: { likeCount: number; re
   return (
     <View style={styles.actions}>
       <View style={styles.action}>
-        <SymbolView name="heart" size={16} tintColor={colors.light.neutral.white} />
+        <Icon name="heart" size={16} tintColor={colors.light.neutral.white} />
         <Text style={styles.actionText}>{likeCount}</Text>
       </View>
       <View style={styles.action}>
-        <SymbolView name="bubble.left" size={16} tintColor={colors.light.neutral.white} />
+        <Icon name="bubble.left" size={16} tintColor={colors.light.neutral.white} />
         <Text style={styles.actionText}>{replyCount}</Text>
       </View>
       <View style={styles.action}>
-        <SymbolView name="square.and.arrow.up" size={16} tintColor={colors.light.neutral.white} />
+        <Icon name="square.and.arrow.up" size={16} tintColor={colors.light.neutral.white} />
         <Text style={styles.actionText}>Share</Text>
       </View>
       <View style={styles.action}>
-        <SymbolView name="ellipsis" size={16} tintColor={colors.light.neutral.white} />
+        <Icon name="ellipsis" size={16} tintColor={colors.light.neutral.white} />
         <Text style={styles.actionText}>More</Text>
       </View>
     </View>

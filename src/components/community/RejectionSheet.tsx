@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View } from 'react-native'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 
 import { Sheet } from '@/components/ui/Sheet'
 import { Text } from '@/components/ui/Text'
@@ -17,7 +17,7 @@ export function RejectionSheet({ visible, onClose, reason, onDelete, onEdit }: R
   return (
     <Sheet visible={visible} onClose={onClose}>
       <View style={styles.iconCircle}>
-        <SymbolView name="xmark" size={22} tintColor={colors.light.neutral.white} weight="bold" />
+        <Icon name="xmark" size={22} tintColor={colors.light.neutral.white} weight="bold" />
       </View>
       <Text variant="h2" style={styles.title}>
         Not approved

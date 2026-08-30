@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native'
 import { Image } from 'expo-image'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { Text } from '@/components/ui/Text'
@@ -19,7 +19,7 @@ export function PrayerStoryView({ prayer, onClose }: PrayerStoryViewProps) {
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <Pressable style={styles.iconButton} onPress={onClose}>
-            <SymbolView name="xmark" size={16} tintColor={colors.light.neutral.white} />
+            <Icon name="xmark" size={16} tintColor={colors.light.neutral.white} />
           </Pressable>
           <Image
             source={require('@/assets/images/dang-logo-white.svg')}

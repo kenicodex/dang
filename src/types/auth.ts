@@ -8,6 +8,13 @@ export interface AuthUser {
   handle: string
   email: string
   avatarUrl?: string
+  coverImageUrl?: string
+  bio?: string
+  location?: string
+  website?: string
+  interests?: string[]
+  followerCount?: number
+  followingCount?: number
   role: UserRole
   isVerified: boolean
   has2FA: boolean

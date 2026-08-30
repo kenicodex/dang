@@ -5,10 +5,14 @@ import {
   TabTrigger,
   TabTriggerSlotProps,
 } from "expo-router/ui";
-import { SymbolView, SymbolViewProps } from "expo-symbols";
+import type { SymbolViewProps } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { GlassView } from "@/components/ui/GlassView";
+import { Icon } from "@/components/ui/Icon";
+import { SideDrawer } from "@/components/home";
+import { useAuthStore, useUIStore } from "@/store";
 import { colors } from "@/theme/colors";
 import { radii } from "@/theme/radii";
 import { shadows } from "@/theme/shadows";
@@ -30,16 +34,9 @@ const TABS: TabConfig[] = [
     activeIcon: "house.fill",
   },
   {
-    name: "search",
-    href: "/search",
-    label: "Search",
-    icon: "magnifyingglass",
-    activeIcon: "magnifyingglass",
-  },
-  {
     name: "community",
     href: "/community",
-    label: "Community",
+    label: "Spaces",
     icon: "person.2",
     activeIcon: "person.2.fill",
   },
@@ -61,12 +58,18 @@ const TABS: TabConfig[] = [
 
 export default function AppTabs() {
   const insets = useSafeAreaInsets();
+  const user = useAuthStore((s) => s.user);
+  const isDrawerOpen = useUIStore((s) => s.isDrawerOpen);
+  const closeDrawer = useUIStore((s) => s.closeDrawer);
+  const firstName = user?.displayName?.split(" ")[0] ?? "Amy";
 
   return (
     <Tabs style={styles.root}>
       <TabSlot />
       <TabList asChild>
-        <View
+        <GlassView
+          glassEffectStyle="regular"
+          isInteractive
           style={StyleSheet.flatten([
             styles.bar,
             { bottom: insets.bottom + 8 },
@@ -82,8 +85,16 @@ export default function AppTabs() {
               <TabButton tab={tab} />
             </TabTrigger>
           ))}
-        </View>
+        </GlassView>
       </TabList>
+
+      <SideDrawer
+        visible={isDrawerOpen}
+        onClose={closeDrawer}
+        name={user?.displayName ?? "Amy Johnson"}
+        avatarUri={user?.avatarUrl}
+        avatarInitials={firstName.slice(0, 2).toUpperCase()}
+      />
     </Tabs>
   );
 }
@@ -98,7 +109,7 @@ function TabButton({
   return (
     <Pressable {...props} style={styles.item}>
       <View style={[styles.itemPill, isFocused && styles.itemPillActive]}>
-        <SymbolView
+        <Icon
           name={isFocused ? tab.activeIcon : tab.icon}
           size={22}
           tintColor={tint}
@@ -121,9 +132,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 6,
     borderRadius: radii.full,
-    backgroundColor: colors.light.surface,
+    overflow: "hidden",
+    backgroundColor: "rgba(255,255,255,0.7)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.7)",
+    borderColor: "rgba(255,255,255,0.9)",
     ...shadows.lg,
   },
   item: {
@@ -134,11 +146,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 3,
     paddingVertical: 8,
-    borderRadius: radii.full,
+    borderRadius: 24,
+    overflow: "hidden",
     backgroundColor: "transparent",
   },
   itemPillActive: {
-    backgroundColor: colors.light.surface,
+    backgroundColor: colors.light.primary[50],
   },
   label: {
     fontSize: 12,

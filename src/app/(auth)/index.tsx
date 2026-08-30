@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router'
 import { Image } from 'expo-image'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 import { StyleSheet, View } from 'react-native'
 
 import { Button } from '@/components/ui/Button'
@@ -32,14 +32,14 @@ export default function SignInChooserScreen() {
             title="Continue with email"
             variant="primary"
             size="lg"
-            icon={<SymbolView name="envelope.fill" size={18} tintColor={colors.light.neutral.white} />}
+            icon={<Icon name="envelope.fill" size={18} tintColor={colors.light.neutral.white} />}
             onPress={() => router.push('/(auth)/sign-in')}
           />
           <Button
             title="Continue with phone"
             variant="outline"
             size="lg"
-            icon={<SymbolView name="phone.fill" size={18} tintColor={colors.light.text} />}
+            icon={<Icon name="phone.fill" size={18} tintColor={colors.light.text} />}
             onPress={() => router.push('/(auth)/phone')}
           />
 
@@ -53,7 +53,7 @@ export default function SignInChooserScreen() {
             title="Continue with Apple"
             variant="outline"
             size="lg"
-            icon={<SymbolView name="apple.logo" size={18} tintColor={colors.light.text} />}
+            icon={<Icon name="apple.logo" size={18} tintColor={colors.light.text} />}
             onPress={() => {}}
           />
           <Button

@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native'
-import { SymbolView } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
 
 import { colors } from '@/theme/colors'
 
@@ -22,7 +22,7 @@ export function AnonymousAvatar({ size = 'md' }: AnonymousAvatarProps) {
         { width: dimension, height: dimension, borderRadius: dimension / 2 },
       ]}
     >
-      <SymbolView name="person.fill" size={ICON_SIZES[size]} tintColor="rgba(255,255,255,0.85)" />
+      <Icon name="person.fill" size={ICON_SIZES[size]} tintColor="rgba(255,255,255,0.85)" />
     </View>
   )
 }

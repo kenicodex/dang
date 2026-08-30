@@ -1,6 +1,7 @@
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
-import { SymbolView, type SymbolViewProps } from 'expo-symbols'
+import { Icon } from '@/components/ui/Icon'
+import type { SymbolViewProps } from 'expo-symbols'
 
 import { Text } from '@/components/ui/Text'
 import { colors } from '@/theme/colors'
@@ -23,7 +24,7 @@ export function SpacesSection({ spaces }: SpacesSectionProps) {
       {spaces.map(space => (
         <LinearGradient key={space.name} colors={space.gradient} style={styles.tile}>
           <View style={styles.iconBadge}>
-            <SymbolView name={space.icon} size={18} tintColor={colors.light.neutral.white} />
+            <Icon name={space.icon} size={18} tintColor={colors.light.neutral.white} />
           </View>
           <Text style={styles.name}>{space.name}</Text>
           <Text style={styles.posts}>{space.newPosts} new posts</Text>
