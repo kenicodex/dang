@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
@@ -10,10 +10,13 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Text } from '@/components/ui/Text'
 import { Button } from '@/components/ui/Button'
 import { Sheet } from '@/components/ui/Sheet'
+import { OtpInput } from '@/components/flow/OtpInput'
 import { MOCK_PROFILE } from '@/components/account/profile.data'
+import { ApiError } from '@/api/client'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useUIStore } from '@/store/useUIStore'
 import { colors } from '@/theme/colors'
+import type { AuthSessionInfo } from '@/types/auth'
 
 type RowTone = 'default' | 'warning' | 'danger'
 
@@ -23,13 +26,26 @@ const TONE_COLORS: Record<RowTone, { bg: string; icon: string; title: string }> 
   danger: { bg: colors.light.semantic.errorBg, icon: colors.light.semantic.error, title: colors.light.semantic.error },
 }
 
-const SESSIONS = [
-  { id: 'session-1', device: 'iPhone 14 Pro', icon: 'iphone' as const, subtitle: 'Lagos, NG · This device · Now', current: true },
-  { id: 'session-2', device: 'MacBook Pro', icon: 'laptopcomputer' as const, subtitle: 'Lagos, NG · Last active 2h ago', current: false },
-]
-
 function formatJoined(date: Date) {
   return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(date)
+}
+
+function sessionIcon(session: AuthSessionInfo): SymbolViewProps['name'] {
+  const text = `${session.deviceName ?? ''} ${session.userAgent ?? ''}`.toLowerCase()
+  if (text.includes('ipad') || text.includes('tablet')) return 'ipad'
+  if (text.includes('iphone') || text.includes('android')) return 'iphone'
+  if (text.includes('mac') || text.includes('windows') || text.includes('linux')) return 'laptopcomputer'
+  return 'display'
+}
+
+function sessionSubtitle(session: AuthSessionInfo) {
+  const parts = [session.location]
+  if (session.isCurrent) {
+    parts.push('This device')
+  } else if (session.lastActiveAt) {
+    parts.push(`Last active ${new Date(session.lastActiveAt).toLocaleString()}`)
+  }
+  return parts.filter(Boolean).join(' · ')
 }
 
 function SettingsSection({ label, children }: { label: string; children: ReactNode }) {
@@ -80,7 +96,17 @@ function SettingsRow({
 export default function SettingsScreen() {
   const authUser = useAuthStore(s => s.user)
   const logout = useAuthStore(s => s.logout)
+  const requestEmailChange = useAuthStore(s => s.requestEmailChange)
+  const requestPhoneChange = useAuthStore(s => s.requestPhoneChange)
+  const confirmPhoneChange = useAuthStore(s => s.confirmPhoneChange)
+  const isAuthLoading = useAuthStore(s => s.isLoading)
+  const sessions = useAuthStore(s => s.sessions)
+  const isSessionsLoading = useAuthStore(s => s.isSessionsLoading)
+  const loadSessions = useAuthStore(s => s.loadSessions)
+  const revokeSession = useAuthStore(s => s.revokeSession)
+  const revokeOtherSessions = useAuthStore(s => s.revokeOtherSessions)
   const openDrawer = useUIStore(s => s.openDrawer)
+  const showToast = useUIStore(s => s.showToast)
   const profile = authUser ?? MOCK_PROFILE
 
   const [pushEnabled, setPushEnabled] = useState(true)
@@ -94,11 +120,85 @@ export default function SettingsScreen() {
 
   const [newEmail, setNewEmail] = useState('')
   const [newPhone, setNewPhone] = useState('')
+  const [phoneStep, setPhoneStep] = useState<'enter' | 'code'>('enter')
+  const [phoneCode, setPhoneCode] = useState('')
+
+  const closeEmailSheet = () => {
+    setEmailSheetVisible(false)
+    setNewEmail('')
+  }
+
+  const closePhoneSheet = () => {
+    setPhoneSheetVisible(false)
+    setPhoneStep('enter')
+    setNewPhone('')
+    setPhoneCode('')
+  }
+
+  const handleSendEmailVerification = async () => {
+    try {
+      await requestEmailChange(newEmail.trim())
+      showToast('Verification link sent to your new email address.', 'success')
+      closeEmailSheet()
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Could not send verification email.'
+      showToast(message, 'error')
+    }
+  }
+
+  const handleSendPhoneOtp = async () => {
+    try {
+      await requestPhoneChange(`+234${newPhone.trim()}`)
+      setPhoneStep('code')
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Could not send verification code.'
+      showToast(message, 'error')
+    }
+  }
+
+  const handleConfirmPhoneChange = async () => {
+    try {
+      await confirmPhoneChange(`+234${newPhone.trim()}`, phoneCode)
+      showToast('Phone number updated.', 'success')
+      closePhoneSheet()
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'That code didn’t work. Please try again.'
+      showToast(message, 'error')
+    }
+  }
 
   const handleLogout = () => {
     setLogoutSheetVisible(false)
     logout()
     router.replace('/(auth)')
+  }
+
+  useEffect(() => {
+    if (!sessionsSheetVisible) return
+    loadSessions().catch(err => {
+      const message = err instanceof ApiError ? err.message : 'Could not load your active sessions.'
+      showToast(message, 'error')
+    })
+  }, [sessionsSheetVisible, loadSessions, showToast])
+
+  const handleRevokeSession = async (id: string) => {
+    try {
+      await revokeSession(id)
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Could not sign out that device.'
+      showToast(message, 'error')
+    }
+  }
+
+  const handleRevokeOtherSessions = async () => {
+    try {
+      await revokeOtherSessions()
+      showToast('Signed out on all other devices.', 'success')
+      setSessionsSheetVisible(false)
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Could not sign out other devices.'
+      showToast(message, 'error')
+    }
   }
 
   return (
@@ -221,7 +321,7 @@ export default function SettingsScreen() {
         <Text style={styles.footer}>Member since {formatJoined(profile.createdAt)} · Dang v1.0</Text>
       </ScrollView>
 
-      <Sheet visible={emailSheetVisible} onClose={() => setEmailSheetVisible(false)} title="Update Email Address">
+      <Sheet visible={emailSheetVisible} onClose={closeEmailSheet} title="Update Email Address">
         <Text style={styles.sheetLabel}>Email Address</Text>
         <TextInput
           value={newEmail}
@@ -233,63 +333,102 @@ export default function SettingsScreen() {
           style={styles.sheetInput}
         />
         <Text style={styles.sheetHelper}>A verification link will be sent to your new email address.</Text>
-        <Button title="Send Verification" style={styles.sheetButton} onPress={() => setEmailSheetVisible(false)} />
-        <Pressable style={styles.sheetCancel} onPress={() => setEmailSheetVisible(false)}>
+        <Button
+          title="Send Verification"
+          disabled={!newEmail.trim()}
+          loading={isAuthLoading}
+          style={styles.sheetButton}
+          onPress={handleSendEmailVerification}
+        />
+        <Pressable style={styles.sheetCancel} onPress={closeEmailSheet}>
           <Text style={styles.sheetCancelText}>Cancel</Text>
         </Pressable>
       </Sheet>
 
-      <Sheet visible={phoneSheetVisible} onClose={() => setPhoneSheetVisible(false)} title="Update Phone Number">
-        <Text style={styles.sheetLabel}>Phone Number</Text>
-        <View style={styles.phoneRow}>
-          <View style={styles.phoneCode}>
-            <Text style={styles.phoneCodeText}>+234</Text>
-            <Icon name="chevron.down" size={11} tintColor={colors.light.textSoft} />
-          </View>
-          <TextInput
-            value={newPhone}
-            onChangeText={setNewPhone}
-            placeholder="8219876123"
-            placeholderTextColor={colors.light.textSoft}
-            keyboardType="phone-pad"
-            style={[styles.sheetInput, styles.phoneInput]}
-          />
-        </View>
-        <Text style={styles.sheetHelper}>A verification code will be sent to your new phone number.</Text>
-        <Button title="Save" style={styles.sheetButton} onPress={() => setPhoneSheetVisible(false)} />
-        <Pressable style={styles.sheetCancel} onPress={() => setPhoneSheetVisible(false)}>
-          <Text style={styles.sheetCancelText}>Cancel</Text>
-        </Pressable>
+      <Sheet visible={phoneSheetVisible} onClose={closePhoneSheet} title="Update Phone Number">
+        {phoneStep === 'enter' ? (
+          <>
+            <Text style={styles.sheetLabel}>Phone Number</Text>
+            <View style={styles.phoneRow}>
+              <View style={styles.phoneCode}>
+                <Text style={styles.phoneCodeText}>+234</Text>
+                <Icon name="chevron.down" size={11} tintColor={colors.light.textSoft} />
+              </View>
+              <TextInput
+                value={newPhone}
+                onChangeText={setNewPhone}
+                placeholder="8219876123"
+                placeholderTextColor={colors.light.textSoft}
+                keyboardType="phone-pad"
+                style={[styles.sheetInput, styles.phoneInput]}
+              />
+            </View>
+            <Text style={styles.sheetHelper}>A verification code will be sent to your new phone number.</Text>
+            <Button
+              title="Send Code"
+              disabled={!newPhone.trim()}
+              loading={isAuthLoading}
+              style={styles.sheetButton}
+              onPress={handleSendPhoneOtp}
+            />
+            <Pressable style={styles.sheetCancel} onPress={closePhoneSheet}>
+              <Text style={styles.sheetCancelText}>Cancel</Text>
+            </Pressable>
+          </>
+        ) : (
+          <>
+            <Text style={styles.sheetLabel}>Enter the code sent to +234{newPhone}</Text>
+            <View style={styles.otpWrap}>
+              <OtpInput length={6} value={phoneCode} onChangeText={setPhoneCode} autoFocus />
+            </View>
+            <Button
+              title="Verify & Save"
+              disabled={phoneCode.length < 6}
+              loading={isAuthLoading}
+              style={styles.sheetButton}
+              onPress={handleConfirmPhoneChange}
+            />
+            <Pressable style={styles.sheetCancel} onPress={() => setPhoneStep('enter')}>
+              <Text style={styles.sheetCancelText}>Back</Text>
+            </Pressable>
+          </>
+        )}
       </Sheet>
 
       <Sheet visible={sessionsSheetVisible} onClose={() => setSessionsSheetVisible(false)} title="Active Sessions">
-        <View style={styles.sessionsList}>
-          {SESSIONS.map(session => (
-            <View key={session.id} style={styles.sessionRow}>
-              <View style={styles.sessionIcon}>
-                <Icon name={session.icon} size={18} tintColor={colors.light.primary[600]} />
-              </View>
-              <View style={styles.rowText}>
-                <Text style={styles.rowTitle}>{session.device}</Text>
-                <Text style={styles.rowSubtitle}>{session.subtitle}</Text>
-              </View>
-              {session.current ? (
-                <View style={styles.currentBadge}>
-                  <Text style={styles.currentBadgeText}>Current</Text>
+        {isSessionsLoading && sessions.length === 0 ? (
+          <Text style={styles.sheetHelper}>Loading your active sessions…</Text>
+        ) : (
+          <View style={styles.sessionsList}>
+            {sessions.map(session => (
+              <View key={session.id} style={styles.sessionRow}>
+                <View style={styles.sessionIcon}>
+                  <Icon name={sessionIcon(session)} size={18} tintColor={colors.light.primary[600]} />
                 </View>
-              ) : (
-                <Pressable>
-                  <Text style={styles.signOutText}>Sign out</Text>
-                </Pressable>
-              )}
-            </View>
-          ))}
-        </View>
+                <View style={styles.rowText}>
+                  <Text style={styles.rowTitle}>{session.deviceName ?? 'Unknown device'}</Text>
+                  <Text style={styles.rowSubtitle}>{sessionSubtitle(session)}</Text>
+                </View>
+                {session.isCurrent ? (
+                  <View style={styles.currentBadge}>
+                    <Text style={styles.currentBadgeText}>Current</Text>
+                  </View>
+                ) : (
+                  <Pressable onPress={() => handleRevokeSession(session.id)}>
+                    <Text style={styles.signOutText}>Sign out</Text>
+                  </Pressable>
+                )}
+              </View>
+            ))}
+            {sessions.length === 0 && <Text style={styles.sheetHelper}>No active sessions found.</Text>}
+          </View>
+        )}
         <Button
           title="Sign out on all other devices"
           variant="outline"
+          disabled={sessions.filter(s => !s.isCurrent).length === 0}
           style={styles.signOutAllButton}
-          onPress={() => setSessionsSheetVisible(false)}
+          onPress={handleRevokeOtherSessions}
         />
       </Sheet>
 
@@ -470,6 +609,10 @@ const styles = StyleSheet.create({
     color: colors.light.textMuted,
     marginTop: 10,
     lineHeight: 18,
+  },
+  otpWrap: {
+    marginTop: 12,
+    alignItems: 'center',
   },
   sheetButton: {
     borderRadius: 999,

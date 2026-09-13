@@ -7,12 +7,28 @@ import { Input } from '@/components/ui/Input'
 import { Text } from '@/components/ui/Text'
 import { FlowScreen } from '@/components/flow/FlowScreen'
 import { StepHeader } from '@/components/flow/StepHeader'
+import { ApiError } from '@/api/client'
+import { useAuthStore } from '@/store/useAuthStore'
+import { useUIStore } from '@/store/useUIStore'
 import { colors } from '@/theme/colors'
 
 export default function SignInScreen() {
   const router = useRouter()
+  const login = useAuthStore(s => s.login)
+  const isLoading = useAuthStore(s => s.isLoading)
+  const showToast = useUIStore(s => s.showToast)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+
+  const handleSignIn = async () => {
+    try {
+      await login(email.trim(), password)
+      router.replace('/home')
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Something went wrong. Please try again.'
+      showToast(message, 'error')
+    }
+  }
 
   return (
     <FlowScreen>
@@ -61,8 +77,10 @@ export default function SignInScreen() {
           title="Sign In"
           variant="primary"
           size="lg"
+          loading={isLoading}
+          disabled={!email.trim() || !password}
           style={styles.submit}
-          onPress={() => router.replace('/home')}
+          onPress={handleSignIn}
         />
 
         <Text style={styles.signUpRow}>

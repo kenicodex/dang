@@ -7,6 +7,9 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Text } from '@/components/ui/Text'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { ApiError } from '@/api/client'
+import { useAuthStore } from '@/store/useAuthStore'
+import { useUIStore } from '@/store/useUIStore'
 import { colors } from '@/theme/colors'
 
 function getPasswordStrength(password: string) {
@@ -23,6 +26,9 @@ function getPasswordStrength(password: string) {
 }
 
 export default function ChangePasswordScreen() {
+  const changePassword = useAuthStore(s => s.changePassword)
+  const isLoading = useAuthStore(s => s.isLoading)
+  const showToast = useUIStore(s => s.showToast)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -32,6 +38,17 @@ export default function ChangePasswordScreen() {
   const meetsPolicy =
     newPassword.length >= 8 && /[a-z]/.test(newPassword) && /[A-Z]/.test(newPassword) && /\d/.test(newPassword)
   const canSubmit = !!currentPassword && meetsPolicy && !!confirmPassword && newPassword === confirmPassword
+
+  const handleSubmit = async () => {
+    try {
+      await changePassword(currentPassword, newPassword)
+      showToast('Password updated successfully.', 'success')
+      router.back()
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Could not update your password. Please try again.'
+      showToast(message, 'error')
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -85,7 +102,13 @@ export default function ChangePasswordScreen() {
           </View>
         )}
 
-        <Button title="Update Password" disabled={!canSubmit} style={styles.submitButton} onPress={() => router.back()} />
+        <Button
+          title="Update Password"
+          disabled={!canSubmit}
+          loading={isLoading}
+          style={styles.submitButton}
+          onPress={handleSubmit}
+        />
       </ScrollView>
     </SafeAreaView>
   )

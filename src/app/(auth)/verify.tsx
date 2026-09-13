@@ -7,6 +7,9 @@ import { FlowScreen } from '@/components/flow/FlowScreen'
 import { StepHeader } from '@/components/flow/StepHeader'
 import { NextFab } from '@/components/flow/NextFab'
 import { OtpInput } from '@/components/flow/OtpInput'
+import { ApiError } from '@/api/client'
+import { useAuthStore } from '@/store/useAuthStore'
+import { useUIStore } from '@/store/useUIStore'
 import { colors } from '@/theme/colors'
 
 const CODE_LENGTH = 4
@@ -27,6 +30,10 @@ export default function VerifyScreen() {
     method?: string
     value?: string
   }>()
+  const verifyOtp = useAuthStore(s => s.verifyOtp)
+  const sendOtp = useAuthStore(s => s.sendOtp)
+  const isLoading = useAuthStore(s => s.isLoading)
+  const showToast = useUIStore(s => s.showToast)
   const [code, setCode] = useState('')
   const [secondsLeft, setSecondsLeft] = useState(RESEND_SECONDS)
 
@@ -35,6 +42,31 @@ export default function VerifyScreen() {
     const timer = setInterval(() => setSecondsLeft(s => Math.max(s - 1, 0)), 1000)
     return () => clearInterval(timer)
   }, [secondsLeft])
+
+  const handleResend = async () => {
+    setSecondsLeft(RESEND_SECONDS)
+    if (method !== 'phone') return
+    try {
+      await sendOtp(value)
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Could not resend code.'
+      showToast(message, 'error')
+    }
+  }
+
+  const handleNext = async () => {
+    if (method !== 'phone') {
+      router.push('/(onboarding)/name')
+      return
+    }
+    try {
+      await verifyOtp(value, code)
+      router.push('/(onboarding)/name')
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'That code didn’t work. Please try again.'
+      showToast(message, 'error')
+    }
+  }
 
   return (
     <FlowScreen>
@@ -59,7 +91,7 @@ export default function VerifyScreen() {
               Didn&rsquo;t get a code? Resend in 0:{secondsLeft.toString().padStart(2, '0')}
             </Text>
           ) : (
-            <Pressable onPress={() => setSecondsLeft(RESEND_SECONDS)}>
+            <Pressable onPress={handleResend}>
               <Text style={styles.resendLink}>Resend code</Text>
             </Pressable>
           )}
@@ -70,7 +102,7 @@ export default function VerifyScreen() {
       </View>
 
       <View style={styles.fabRow}>
-        <NextFab onPress={() => router.push('/(onboarding)/name')} />
+        <NextFab onPress={handleNext} disabled={code.length < CODE_LENGTH} loading={isLoading} />
       </View>
     </FlowScreen>
   )

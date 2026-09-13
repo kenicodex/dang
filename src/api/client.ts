@@ -1,3 +1,5 @@
+import { authStorage } from '@/services/authStorage'
+
 export type RequestMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
 export interface RequestOptions extends RequestInit {
@@ -143,5 +145,6 @@ export function createApiClient(config: ApiClientConfig): ApiClientInterface {
 
 export const apiClient: ApiClientInterface = createApiClient({
   baseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? '/api',
-  getAuthToken: async () => undefined,
+  getAuthToken: () => authStorage.getAccessToken(),
+  onAuthFailure: () => authStorage.clearSession(),
 })

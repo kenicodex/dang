@@ -1,15 +1,48 @@
 import { useRouter } from 'expo-router'
 import { Image } from 'expo-image'
+import * as AppleAuthentication from 'expo-apple-authentication'
 import { Icon } from '@/components/ui/Icon'
-import { Pressable, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 
 import { Button } from '@/components/ui/Button'
 import { Text } from '@/components/ui/Text'
 import { FlowScreen } from '@/components/flow/FlowScreen'
+import { ApiError } from '@/api/client'
+import { useAuthStore } from '@/store/useAuthStore'
+import { useUIStore } from '@/store/useUIStore'
 import { colors } from '@/theme/colors'
 
 export default function SignUpScreen() {
   const router = useRouter()
+  const loginWithApple = useAuthStore(s => s.loginWithApple)
+  const showToast = useUIStore(s => s.showToast)
+
+  const handleAppleSignIn = async () => {
+    try {
+      const nonce = Math.random().toString(36).slice(2)
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+        nonce,
+      })
+      if (!credential.identityToken) throw new Error('Apple did not return an identity token.')
+      const displayName = credential.fullName?.givenName
+        ? `${credential.fullName.givenName} ${credential.fullName.familyName ?? ''}`.trim()
+        : undefined
+      await loginWithApple(credential.identityToken, nonce, displayName)
+      router.replace('/home')
+    } catch (err: any) {
+      if (err?.code === 'ERR_REQUEST_CANCELED') return
+      const message = err instanceof ApiError ? err.message : 'Apple sign-in failed. Please try again.'
+      showToast(message, 'error')
+    }
+  }
+
+  const handleGoogleSignIn = () => {
+    showToast('Google sign-in is not configured yet.', 'info')
+  }
 
   return (
     <FlowScreen>
@@ -57,7 +90,7 @@ export default function SignUpScreen() {
             variant="outline"
             size="lg"
             icon={<Icon name="apple.logo" size={18} tintColor={colors.light.text} />}
-            onPress={() => {}}
+            onPress={handleAppleSignIn}
           />
           <Button
             title="Continue with Google"
@@ -70,7 +103,7 @@ export default function SignUpScreen() {
                 contentFit="contain"
               />
             }
-            onPress={() => {}}
+            onPress={handleGoogleSignIn}
           />
         </View>
 

@@ -10,6 +10,9 @@ import { FlowScreen } from '@/components/flow/FlowScreen'
 import { StepHeader } from '@/components/flow/StepHeader'
 import { NextFab } from '@/components/flow/NextFab'
 import { FooterNote } from '@/components/flow/FooterNote'
+import { ApiError } from '@/api/client'
+import { useAuthStore } from '@/store/useAuthStore'
+import { useUIStore } from '@/store/useUIStore'
 import { colors } from '@/theme/colors'
 
 const COUNTRIES = [
@@ -22,9 +25,23 @@ const COUNTRIES = [
 
 export default function PhoneSignUpScreen() {
   const router = useRouter()
+  const sendOtp = useAuthStore(s => s.sendOtp)
+  const isLoading = useAuthStore(s => s.isLoading)
+  const showToast = useUIStore(s => s.showToast)
   const [country, setCountry] = useState(COUNTRIES[0])
   const [number, setNumber] = useState('')
   const [pickerVisible, setPickerVisible] = useState(false)
+
+  const handleNext = async () => {
+    const phone = `${country.code}${number.replace(/\D/g, '')}`
+    try {
+      await sendOtp(phone)
+      router.push({ pathname: '/(auth)/verify', params: { method: 'phone', value: phone } })
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Could not send code. Please try again.'
+      showToast(message, 'error')
+    }
+  }
 
   return (
     <FlowScreen>
@@ -57,14 +74,7 @@ export default function PhoneSignUpScreen() {
       <View style={styles.footer}>
         <FooterNote icon="lock.shield.fill">Your number stays private, always</FooterNote>
         <View style={styles.fabRow}>
-          <NextFab
-            onPress={() =>
-              router.push({
-                pathname: '/(auth)/verify',
-                params: { method: 'phone', value: `${country.code} ${number}` },
-              })
-            }
-          />
+          <NextFab onPress={handleNext} disabled={!number.trim()} loading={isLoading} />
         </View>
       </View>
 

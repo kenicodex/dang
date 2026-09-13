@@ -100,6 +100,7 @@ export default function SpacesScreen() {
       )}
 
       <ScrollView
+        style={styles.listScroll}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
       >
@@ -152,12 +153,17 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   categoryScroll: {
+    flexGrow: 0,
+    flexShrink: 0,
     marginTop: 14,
   },
   categoryContent: {
     paddingHorizontal: 20,
     gap: 8,
     alignItems: "center",
+  },
+  listScroll: {
+    flex: 1,
   },
   categoryPill: {
     height: 36,

@@ -38,6 +38,7 @@ const config: ExpoConfig = {
   ios: {
     icon: './assets/images/icon.png',
     bundleIdentifier: variant.iosBundleId,
+    usesAppleSignIn: true,
   },
   android: {
     adaptiveIcon: {
@@ -67,6 +68,8 @@ const config: ExpoConfig = {
         },
       },
     ],
+    'expo-secure-store',
+    'expo-apple-authentication',
   ],
   experiments: {
     typedRoutes: true,
