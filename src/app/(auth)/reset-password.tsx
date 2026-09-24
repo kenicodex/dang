@@ -9,15 +9,14 @@ import { Text } from '@/components/ui/Text'
 import { FlowScreen } from '@/components/flow/FlowScreen'
 import { StepHeader } from '@/components/flow/StepHeader'
 import { ApiError } from '@/api/client'
-import { useAuthStore } from '@/store/useAuthStore'
+import { useResetPasswordMutation } from '@/api/hooks/auth.hooks'
 import { useUIStore } from '@/store/useUIStore'
 import { colors } from '@/theme/colors'
 
 export default function ResetPasswordScreen() {
   const router = useRouter()
   const { token } = useLocalSearchParams<{ token?: string }>()
-  const resetPassword = useAuthStore(s => s.resetPassword)
-  const isLoading = useAuthStore(s => s.isLoading)
+  const { mutateAsync: resetPassword, isPending: isLoading } = useResetPasswordMutation()
   const showToast = useUIStore(s => s.showToast)
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -32,8 +31,8 @@ export default function ResetPasswordScreen() {
   const handleSubmit = async () => {
     if (!token) return
     try {
-      const success = await resetPassword(token, newPassword)
-      if (success) {
+      const response = await resetPassword({ token, newPassword })
+      if (response.success) {
         setDone(true)
       } else {
         showToast('That reset link is invalid or has expired.', 'error')

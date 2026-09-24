@@ -144,7 +144,7 @@ export function createApiClient(config: ApiClientConfig): ApiClientInterface {
 }
 
 export const apiClient: ApiClientInterface = createApiClient({
-  baseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? '/api',
+  baseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? 'https://dang-y2k5.onrender.com/api/v1',
   getAuthToken: () => authStorage.getAccessToken(),
   onAuthFailure: () => authStorage.clearSession(),
 })

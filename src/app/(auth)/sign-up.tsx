@@ -8,13 +8,13 @@ import { Button } from '@/components/ui/Button'
 import { Text } from '@/components/ui/Text'
 import { FlowScreen } from '@/components/flow/FlowScreen'
 import { ApiError } from '@/api/client'
-import { useAuthStore } from '@/store/useAuthStore'
+import { useLoginWithAppleMutation } from '@/api/hooks/auth.hooks'
 import { useUIStore } from '@/store/useUIStore'
 import { colors } from '@/theme/colors'
 
 export default function SignUpScreen() {
   const router = useRouter()
-  const loginWithApple = useAuthStore(s => s.loginWithApple)
+  const { mutateAsync: loginWithApple } = useLoginWithAppleMutation()
   const showToast = useUIStore(s => s.showToast)
 
   const handleAppleSignIn = async () => {
@@ -31,7 +31,7 @@ export default function SignUpScreen() {
       const displayName = credential.fullName?.givenName
         ? `${credential.fullName.givenName} ${credential.fullName.familyName ?? ''}`.trim()
         : undefined
-      await loginWithApple(credential.identityToken, nonce, displayName)
+      await loginWithApple({ identityToken: credential.identityToken, nonce, displayName })
       router.replace('/home')
     } catch (err: any) {
       if (err?.code === 'ERR_REQUEST_CANCELED') return

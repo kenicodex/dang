@@ -6,7 +6,8 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { Text } from '@/components/ui/Text'
 import { SpaceCard } from '@/components/community/SpaceCard'
-import { CATEGORIES, SPACES } from '@/components/community/spaces.data'
+import { CATEGORIES } from '@/components/community/spaces.data'
+import { useSpaces } from '@/api/hooks/spaces.hooks'
 import { colors } from '@/theme/colors'
 
 export default function SpaceSearchScreen() {
@@ -14,14 +15,14 @@ export default function SpaceSearchScreen() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('All')
 
+  const { data: spacesPage } = useSpaces(category === 'All' ? undefined : { category })
+  const spaces = spacesPage?.items ?? []
+
   const results = useMemo(() => {
-    return SPACES.filter(space => {
-      const matchesCategory = category === 'All' || space.category === category
-      const matchesQuery =
-        query.trim().length === 0 || space.name.toLowerCase().includes(query.trim().toLowerCase())
-      return matchesCategory && matchesQuery
-    })
-  }, [query, category])
+    const trimmed = query.trim().toLowerCase()
+    if (trimmed.length === 0) return spaces
+    return spaces.filter(space => space.name.toLowerCase().includes(trimmed))
+  }, [query, spaces])
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>

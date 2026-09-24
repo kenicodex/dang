@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Text } from '@/components/ui/Text'
 import { Button } from '@/components/ui/Button'
 import { colors } from '@/theme/colors'
-import type { Channel } from '@/types/community'
+import type { Space } from '@/api/services/spaces.service'
 import { CATEGORY_STYLE } from './spaces.data'
 
 const PERKS = [
@@ -17,7 +17,7 @@ const PERKS = [
 
 interface JoinSpaceModalProps {
   visible: boolean
-  space: Channel | null
+  space: Space | null
   onClose: () => void
   onAgree: () => void
 }
@@ -25,6 +25,10 @@ interface JoinSpaceModalProps {
 export function JoinSpaceModal({ visible, space, onClose, onAgree }: JoinSpaceModalProps) {
   if (!space) return null
   const dotColor = CATEGORY_STYLE[space.category ?? '']?.gradient[1] ?? colors.light.primary[500]
+  const guidelines = (space.guidelines ?? '')
+    .split('.')
+    .map(rule => rule.trim())
+    .filter(Boolean)
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
@@ -62,7 +66,7 @@ export function JoinSpaceModal({ visible, space, onClose, onAgree }: JoinSpaceMo
 
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Space Guidelines</Text>
-            {(space.guidelines ?? []).map((rule, i) => (
+            {guidelines.map((rule, i) => (
               <View key={rule} style={styles.row}>
                 <View style={styles.numberBubble}>
                   <Text style={styles.numberText}>{i + 1}</Text>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Pressable, StyleSheet, View } from 'react-native'
 
 import { Text } from '@/components/ui/Text'
@@ -10,6 +10,13 @@ import { FooterNote } from '@/components/flow/FooterNote'
 import { colors } from '@/theme/colors'
 
 type Faith = 'christian' | 'muslim'
+type FaithStepParams = {
+  email?: string
+  password?: string
+  name?: string
+  city?: string
+  industry?: string
+}
 
 const OPTIONS: { key: Faith; emoji: string; title: string; description: string }[] = [
   {
@@ -28,9 +35,14 @@ const OPTIONS: { key: Faith; emoji: string; title: string; description: string }
 
 export default function FaithStepScreen() {
   const router = useRouter()
+  const params = useLocalSearchParams<FaithStepParams>()
   const [selected, setSelected] = useState<Faith | null>(null)
 
-  const goNext = () => router.push('/(onboarding)/plan')
+  const goNext = () =>
+    router.push({
+      pathname: '/(onboarding)/plan',
+      params: { ...params, faithTradition: selected ?? undefined },
+    })
 
   return (
     <FlowScreen>

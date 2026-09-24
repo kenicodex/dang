@@ -8,7 +8,7 @@ import { Text } from '@/components/ui/Text'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { ApiError } from '@/api/client'
-import { useAuthStore } from '@/store/useAuthStore'
+import { useChangePasswordMutation } from '@/api/hooks/auth.hooks'
 import { useUIStore } from '@/store/useUIStore'
 import { colors } from '@/theme/colors'
 
@@ -26,8 +26,7 @@ function getPasswordStrength(password: string) {
 }
 
 export default function ChangePasswordScreen() {
-  const changePassword = useAuthStore(s => s.changePassword)
-  const isLoading = useAuthStore(s => s.isLoading)
+  const { mutateAsync: changePassword, isPending: isLoading } = useChangePasswordMutation()
   const showToast = useUIStore(s => s.showToast)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -41,7 +40,7 @@ export default function ChangePasswordScreen() {
 
   const handleSubmit = async () => {
     try {
-      await changePassword(currentPassword, newPassword)
+      await changePassword({ currentPassword, newPassword })
       showToast('Password updated successfully.', 'success')
       router.back()
     } catch (err) {

@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native'
 import { Text } from '@/components/ui/Text'
 import { Avatar } from '@/components/ui/Avatar'
 import { colors } from '@/theme/colors'
-import type { Channel } from '@/types/community'
+import type { Space } from '@/api/services/spaces.service'
 import { CATEGORY_STYLE } from './spaces.data'
 
 function formatMemberCount(count: number) {
@@ -14,7 +14,7 @@ function formatMemberCount(count: number) {
 }
 
 interface SpaceCardProps {
-  space: Channel
+  space: Space
   newCount?: number
   onPress?: () => void
 }

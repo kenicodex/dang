@@ -11,7 +11,7 @@ import { StepHeader } from '@/components/flow/StepHeader'
 import { NextFab } from '@/components/flow/NextFab'
 import { FooterNote } from '@/components/flow/FooterNote'
 import { ApiError } from '@/api/client'
-import { useAuthStore } from '@/store/useAuthStore'
+import { useSendOtpMutation } from '@/api/hooks/auth.hooks'
 import { useUIStore } from '@/store/useUIStore'
 import { colors } from '@/theme/colors'
 
@@ -25,8 +25,7 @@ const COUNTRIES = [
 
 export default function PhoneSignUpScreen() {
   const router = useRouter()
-  const sendOtp = useAuthStore(s => s.sendOtp)
-  const isLoading = useAuthStore(s => s.isLoading)
+  const { mutateAsync: sendOtp, isPending: isLoading } = useSendOtpMutation()
   const showToast = useUIStore(s => s.showToast)
   const [country, setCountry] = useState(COUNTRIES[0])
   const [number, setNumber] = useState('')
@@ -35,7 +34,7 @@ export default function PhoneSignUpScreen() {
   const handleNext = async () => {
     const phone = `${country.code}${number.replace(/\D/g, '')}`
     try {
-      await sendOtp(phone)
+      await sendOtp({ phone })
       router.push({ pathname: '/(auth)/verify', params: { method: 'phone', value: phone } })
     } catch (err) {
       const message = err instanceof ApiError ? err.message : 'Could not send code. Please try again.'

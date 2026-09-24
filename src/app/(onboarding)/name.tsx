@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { StyleSheet, TextInput, View } from 'react-native'
 
 import { Text } from '@/components/ui/Text'
@@ -11,6 +11,7 @@ import { colors } from '@/theme/colors'
 
 export default function NameStepScreen() {
   const router = useRouter()
+  const params = useLocalSearchParams<{ email?: string; password?: string }>()
   const [name, setName] = useState('')
 
   return (
@@ -35,7 +36,12 @@ export default function NameStepScreen() {
       <View style={styles.footer}>
         <FooterNote icon="lock.fill">Your real name keeps the community trusted</FooterNote>
         <View style={styles.fabRow}>
-          <NextFab onPress={() => router.push('/(onboarding)/photo')} />
+          <NextFab
+            disabled={!name.trim()}
+            onPress={() =>
+              router.push({ pathname: '/(onboarding)/photo', params: { ...params, name } })
+            }
+          />
         </View>
       </View>
     </FlowScreen>

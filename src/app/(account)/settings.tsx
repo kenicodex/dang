@@ -13,6 +13,16 @@ import { Sheet } from '@/components/ui/Sheet'
 import { OtpInput } from '@/components/flow/OtpInput'
 import { MOCK_PROFILE } from '@/components/account/profile.data'
 import { ApiError } from '@/api/client'
+import {
+  useConfirmPhoneChangeMutation,
+  useLogoutMutation,
+  useRequestEmailChangeMutation,
+  useRequestPhoneChangeMutation,
+  useRevokeOtherSessionsMutation,
+  useRevokeSessionMutation,
+  useSessions,
+} from '@/api/hooks/auth.hooks'
+import { useBlockedAccounts } from '@/api/hooks/users.hooks'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useUIStore } from '@/store/useUIStore'
 import { colors } from '@/theme/colors'
@@ -95,16 +105,12 @@ function SettingsRow({
 
 export default function SettingsScreen() {
   const authUser = useAuthStore(s => s.user)
-  const logout = useAuthStore(s => s.logout)
-  const requestEmailChange = useAuthStore(s => s.requestEmailChange)
-  const requestPhoneChange = useAuthStore(s => s.requestPhoneChange)
-  const confirmPhoneChange = useAuthStore(s => s.confirmPhoneChange)
-  const isAuthLoading = useAuthStore(s => s.isLoading)
-  const sessions = useAuthStore(s => s.sessions)
-  const isSessionsLoading = useAuthStore(s => s.isSessionsLoading)
-  const loadSessions = useAuthStore(s => s.loadSessions)
-  const revokeSession = useAuthStore(s => s.revokeSession)
-  const revokeOtherSessions = useAuthStore(s => s.revokeOtherSessions)
+  const { mutate: logout } = useLogoutMutation()
+  const { mutateAsync: requestEmailChange, isPending: isEmailChangePending } = useRequestEmailChangeMutation()
+  const { mutateAsync: requestPhoneChange, isPending: isSendPhoneOtpPending } = useRequestPhoneChangeMutation()
+  const { mutateAsync: confirmPhoneChange, isPending: isConfirmPhoneChangePending } = useConfirmPhoneChangeMutation()
+  const { mutateAsync: revokeSession } = useRevokeSessionMutation()
+  const { mutateAsync: revokeOtherSessions } = useRevokeOtherSessionsMutation()
   const openDrawer = useUIStore(s => s.openDrawer)
   const showToast = useUIStore(s => s.showToast)
   const profile = authUser ?? MOCK_PROFILE
@@ -117,6 +123,8 @@ export default function SettingsScreen() {
   const [sessionsSheetVisible, setSessionsSheetVisible] = useState(false)
   const [blockedSheetVisible, setBlockedSheetVisible] = useState(false)
   const [logoutSheetVisible, setLogoutSheetVisible] = useState(false)
+
+  const { data: blockedAccounts = [] } = useBlockedAccounts(blockedSheetVisible)
 
   const [newEmail, setNewEmail] = useState('')
   const [newPhone, setNewPhone] = useState('')
@@ -158,7 +166,7 @@ export default function SettingsScreen() {
 
   const handleConfirmPhoneChange = async () => {
     try {
-      await confirmPhoneChange(`+234${newPhone.trim()}`, phoneCode)
+      await confirmPhoneChange({ newPhone: `+234${newPhone.trim()}`, code: phoneCode })
       showToast('Phone number updated.', 'success')
       closePhoneSheet()
     } catch (err) {
@@ -169,17 +177,21 @@ export default function SettingsScreen() {
 
   const handleLogout = () => {
     setLogoutSheetVisible(false)
-    logout()
+    logout(undefined)
     router.replace('/(auth)')
   }
 
+  const {
+    data: sessions = [],
+    isLoading: isSessionsLoading,
+    error: sessionsError,
+  } = useSessions(sessionsSheetVisible)
+
   useEffect(() => {
-    if (!sessionsSheetVisible) return
-    loadSessions().catch(err => {
-      const message = err instanceof ApiError ? err.message : 'Could not load your active sessions.'
-      showToast(message, 'error')
-    })
-  }, [sessionsSheetVisible, loadSessions, showToast])
+    if (!sessionsError) return
+    const message = sessionsError instanceof ApiError ? sessionsError.message : 'Could not load your active sessions.'
+    showToast(message, 'error')
+  }, [sessionsError, showToast])
 
   const handleRevokeSession = async (id: string) => {
     try {
@@ -293,7 +305,12 @@ export default function SettingsScreen() {
             onPress={() => router.push('/(account)/data')}
             isFirst
           />
-          <SettingsRow icon="person.2.slash.fill" title="Blocked Accounts" subtitle="0 accounts blocked" onPress={() => setBlockedSheetVisible(true)} />
+          <SettingsRow
+            icon="person.2.slash.fill"
+            title="Blocked Accounts"
+            subtitle={`${blockedAccounts.length} account${blockedAccounts.length === 1 ? '' : 's'} blocked`}
+            onPress={() => setBlockedSheetVisible(true)}
+          />
           <SettingsRow icon="flag.fill" title="Report a Problem" subtitle="Let us know what's wrong" onPress={() => router.push('/(account)/report-problem')} />
           <SettingsRow icon="doc.text" title="Privacy Policy" subtitle="GDPR (UK) & NDPR (Nigeria)" onPress={() => router.push('/(account)/privacy-policy')} />
           <SettingsRow icon="doc.plaintext" title="Terms of Service" subtitle="Community guidelines & terms" onPress={() => router.push('/(account)/terms')} />
@@ -336,7 +353,7 @@ export default function SettingsScreen() {
         <Button
           title="Send Verification"
           disabled={!newEmail.trim()}
-          loading={isAuthLoading}
+          loading={isEmailChangePending}
           style={styles.sheetButton}
           onPress={handleSendEmailVerification}
         />
@@ -367,7 +384,7 @@ export default function SettingsScreen() {
             <Button
               title="Send Code"
               disabled={!newPhone.trim()}
-              loading={isAuthLoading}
+              loading={isSendPhoneOtpPending}
               style={styles.sheetButton}
               onPress={handleSendPhoneOtp}
             />
@@ -384,7 +401,7 @@ export default function SettingsScreen() {
             <Button
               title="Verify & Save"
               disabled={phoneCode.length < 6}
-              loading={isAuthLoading}
+              loading={isConfirmPhoneChangePending}
               style={styles.sheetButton}
               onPress={handleConfirmPhoneChange}
             />
@@ -433,15 +450,29 @@ export default function SettingsScreen() {
       </Sheet>
 
       <Sheet visible={blockedSheetVisible} onClose={() => setBlockedSheetVisible(false)} title="Blocked Accounts">
-        <View style={styles.blockedEmpty}>
-          <View style={styles.blockedIconWrap}>
-            <Icon name="person.crop.square" size={40} tintColor={colors.light.primary[400]} />
+        {blockedAccounts.length === 0 ? (
+          <View style={styles.blockedEmpty}>
+            <View style={styles.blockedIconWrap}>
+              <Icon name="person.crop.square" size={40} tintColor={colors.light.primary[400]} />
+            </View>
+            <Text style={styles.blockedTitle}>No blocked accounts</Text>
+            <Text style={styles.blockedDescription}>
+              Block someone from their profile to prevent them from seeing your posts or messaging you.
+            </Text>
           </View>
-          <Text style={styles.blockedTitle}>No blocked accounts</Text>
-          <Text style={styles.blockedDescription}>
-            Block someone from their profile to prevent them from seeing your posts or messaging you.
-          </Text>
-        </View>
+        ) : (
+          <View style={styles.sessionsList}>
+            {blockedAccounts.map(account => (
+              <View key={account.id} style={styles.sessionRow}>
+                <Avatar uri={account.avatarUrl} initials={account.displayName.slice(0, 2).toUpperCase()} size="sm" />
+                <View style={styles.rowText}>
+                  <Text style={styles.rowTitle}>{account.displayName}</Text>
+                  <Text style={styles.rowSubtitle}>@{account.handle}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
         <Pressable style={styles.softButton} onPress={() => setBlockedSheetVisible(false)}>
           <Text style={styles.softButtonText}>Close</Text>
         </Pressable>

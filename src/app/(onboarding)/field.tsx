@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Pressable, StyleSheet, View } from 'react-native'
 
 import { Text } from '@/components/ui/Text'
@@ -25,9 +25,19 @@ const FIELDS = [
 
 export default function FieldStepScreen() {
   const router = useRouter()
+  const params = useLocalSearchParams<{
+    email?: string
+    password?: string
+    name?: string
+    city?: string
+  }>()
   const [selected, setSelected] = useState<string | null>(null)
 
-  const goNext = () => router.push('/(onboarding)/faith')
+  const goNext = () =>
+    router.push({
+      pathname: '/(onboarding)/faith',
+      params: { ...params, industry: selected ?? undefined },
+    })
 
   return (
     <FlowScreen>

@@ -8,7 +8,7 @@ import { StepHeader } from '@/components/flow/StepHeader'
 import { NextFab } from '@/components/flow/NextFab'
 import { OtpInput } from '@/components/flow/OtpInput'
 import { ApiError } from '@/api/client'
-import { useAuthStore } from '@/store/useAuthStore'
+import { useSendOtpMutation, useVerifyOtpMutation } from '@/api/hooks/auth.hooks'
 import { useUIStore } from '@/store/useUIStore'
 import { colors } from '@/theme/colors'
 
@@ -26,13 +26,13 @@ function maskContact(method: string, value: string) {
 
 export default function VerifyScreen() {
   const router = useRouter()
-  const { method = 'phone', value = '+234 812 345 6789' } = useLocalSearchParams<{
+  const { method = 'phone', value = '+234 812 345 6789', password } = useLocalSearchParams<{
     method?: string
     value?: string
+    password?: string
   }>()
-  const verifyOtp = useAuthStore(s => s.verifyOtp)
-  const sendOtp = useAuthStore(s => s.sendOtp)
-  const isLoading = useAuthStore(s => s.isLoading)
+  const { mutateAsync: verifyOtp, isPending: isLoading } = useVerifyOtpMutation()
+  const { mutateAsync: sendOtp } = useSendOtpMutation()
   const showToast = useUIStore(s => s.showToast)
   const [code, setCode] = useState('')
   const [secondsLeft, setSecondsLeft] = useState(RESEND_SECONDS)
@@ -47,7 +47,7 @@ export default function VerifyScreen() {
     setSecondsLeft(RESEND_SECONDS)
     if (method !== 'phone') return
     try {
-      await sendOtp(value)
+      await sendOtp({ phone: value })
     } catch (err) {
       const message = err instanceof ApiError ? err.message : 'Could not resend code.'
       showToast(message, 'error')
@@ -56,11 +56,11 @@ export default function VerifyScreen() {
 
   const handleNext = async () => {
     if (method !== 'phone') {
-      router.push('/(onboarding)/name')
+      router.push({ pathname: '/(onboarding)/name', params: { email: value, password } })
       return
     }
     try {
-      await verifyOtp(value, code)
+      await verifyOtp({ phone: value, code })
       router.push('/(onboarding)/name')
     } catch (err) {
       const message = err instanceof ApiError ? err.message : 'That code didn’t work. Please try again.'

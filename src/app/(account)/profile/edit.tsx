@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native'
@@ -13,7 +13,10 @@ import { Input } from '@/components/ui/Input'
 import { GlassView } from '@/components/ui/GlassView'
 import { ActionSheet } from '@/components/ui/ActionSheet'
 import { MOCK_PROFILE, PROFILE_INTERESTS } from '@/components/account/profile.data'
+import { ApiError } from '@/api/client'
+import { useHandleAvailability, useUpdateProfileMutation } from '@/api/hooks/users.hooks'
 import { useAuthStore } from '@/store/useAuthStore'
+import { useUIStore } from '@/store/useUIStore'
 import { colors } from '@/theme/colors'
 
 const COVER_HEIGHT = 240
@@ -23,6 +26,8 @@ const FOOTER_SPACE = 80
 export default function EditProfileScreen() {
   const authUser = useAuthStore(s => s.user)
   const profile = authUser ?? MOCK_PROFILE
+  const showToast = useUIStore(s => s.showToast)
+  const { mutateAsync: updateProfile, isPending: isSaving } = useUpdateProfileMutation()
 
   const [name, setName] = useState(profile.displayName)
   const [username, setUsername] = useState(profile.handle)
@@ -34,6 +39,47 @@ export default function EditProfileScreen() {
 
   const toggleInterest = (interest: string) => {
     setInterests(current => (current.includes(interest) ? current.filter(i => i !== interest) : [...current, interest]))
+  }
+
+  const [debouncedUsername, setDebouncedUsername] = useState(username)
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedUsername(username), 400)
+    return () => clearTimeout(id)
+  }, [username])
+
+  const usernameChanged = debouncedUsername.trim().toLowerCase() !== profile.handle.trim().toLowerCase()
+  const { data: handleAvailability, isFetching: isCheckingHandle } = useHandleAvailability(
+    usernameChanged ? debouncedUsername : '',
+  )
+  const usernameError =
+    usernameChanged && handleAvailability && !handleAvailability.available
+      ? 'That username is taken'
+      : undefined
+  const usernameHelper = !usernameChanged
+    ? undefined
+    : isCheckingHandle
+      ? 'Checking availability…'
+      : handleAvailability?.available
+        ? 'Username is available'
+        : undefined
+
+  const handleSave = async () => {
+    const [city, country] = location.split(',').map(part => part.trim()).filter(Boolean)
+    try {
+      await updateProfile({
+        displayName: name.trim(),
+        handle: username.trim(),
+        websiteUrl: website.trim() || undefined,
+        bio: bio.trim() || undefined,
+        city,
+        country,
+        interests,
+      })
+      router.back()
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Could not save your profile. Please try again.'
+      showToast(message, 'error')
+    }
   }
 
   return (
@@ -72,7 +118,15 @@ export default function EditProfileScreen() {
 
         <View style={styles.form}>
           <Input label="Name" value={name} onChangeText={setName} containerStyle={styles.field} />
-          <Input label="Username" value={username} onChangeText={setUsername} containerStyle={styles.field} />
+          <Input
+            label="Username"
+            value={username}
+            onChangeText={setUsername}
+            containerStyle={styles.field}
+            error={usernameError}
+            helperText={usernameHelper}
+            autoCapitalize="none"
+          />
           <Input label="Location" value={location} onChangeText={setLocation} containerStyle={styles.field} />
           <Input label="Website" value={website} onChangeText={setWebsite} containerStyle={styles.field} />
 
@@ -106,7 +160,13 @@ export default function EditProfileScreen() {
             })}
           </View>
 
-          <Button title="Save" style={styles.saveButton} onPress={() => router.back()} />
+          <Button
+            title="Save"
+            style={styles.saveButton}
+            loading={isSaving}
+            disabled={!!usernameError}
+            onPress={handleSave}
+          />
         </View>
       </ScrollView>
 

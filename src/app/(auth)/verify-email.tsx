@@ -6,7 +6,7 @@ import { Icon } from '@/components/ui/Icon'
 import { Button } from '@/components/ui/Button'
 import { Text } from '@/components/ui/Text'
 import { FlowScreen } from '@/components/flow/FlowScreen'
-import { useAuthStore } from '@/store/useAuthStore'
+import { useConfirmEmailChangeMutation, useVerifyEmailMutation } from '@/api/hooks/auth.hooks'
 import { colors } from '@/theme/colors'
 
 type Status = 'checking' | 'verified' | 'failed'
@@ -15,16 +15,16 @@ export default function VerifyEmailScreen() {
   const router = useRouter()
   const { token, type } = useLocalSearchParams<{ token?: string; type?: string }>()
   const isChange = type === 'change'
-  const verifyEmail = useAuthStore(s => s.verifyEmail)
-  const confirmEmailChange = useAuthStore(s => s.confirmEmailChange)
+  const { mutateAsync: verifyEmail } = useVerifyEmailMutation()
+  const { mutateAsync: confirmEmailChange } = useConfirmEmailChangeMutation()
   const [status, setStatus] = useState<Status>(() => (token ? 'checking' : 'failed'))
 
   useEffect(() => {
     if (!token) return
     let cancelled = false
     const request = isChange
-      ? confirmEmailChange(token).then(() => true)
-      : verifyEmail(token)
+      ? confirmEmailChange({ token }).then(() => true)
+      : verifyEmail({ token }).then(response => response.verified)
     request
       .then(verified => {
         if (!cancelled) setStatus(verified ? 'verified' : 'failed')

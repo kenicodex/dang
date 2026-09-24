@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Image } from 'expo-image'
 import { Icon } from '@/components/ui/Icon'
 import { Pressable, StyleSheet, View } from 'react-native'
@@ -12,9 +12,10 @@ import { colors } from '@/theme/colors'
 
 export default function PhotoStepScreen() {
   const router = useRouter()
+  const params = useLocalSearchParams<{ email?: string; password?: string; name?: string }>()
   const [photoUri, setPhotoUri] = useState<string | null>(null)
 
-  const goNext = () => router.push('/(onboarding)/location')
+  const goNext = () => router.push({ pathname: '/(onboarding)/location', params })
 
   return (
     <FlowScreen>

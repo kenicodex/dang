@@ -13,10 +13,18 @@ import { Tabs } from '@/components/ui/Tabs'
 import { PostCard } from '@/components/community/PostCard'
 import { JoinSpaceModal } from '@/components/community/JoinSpaceModal'
 import { LeaveSpaceSheet } from '@/components/community/LeaveSpaceSheet'
-import { CATEGORY_STYLE, SPACES, SPACE_POSTS } from '@/components/community/spaces.data'
-import { useCommunityStore } from '@/store'
+import { CATEGORY_STYLE, SPACE_POSTS } from '@/components/community/spaces.data'
+import { ApiError } from '@/api/client'
+import {
+  useApplyToSpaceMutation,
+  useJoinSpaceMutation,
+  useLeaveSpaceMutation,
+  useSpace,
+  useSpaceMembers,
+} from '@/api/hooks/spaces.hooks'
+import type { SpaceMember } from '@/api/services/spaces.service'
+import { useAuthStore, useUIStore } from '@/store'
 import { colors } from '@/theme/colors'
-import type { ChannelMember } from '@/types/community'
 
 type DetailTab = 'trending' | 'media' | 'about'
 
@@ -25,23 +33,27 @@ function formatMemberCount(count: number) {
   return String(count)
 }
 
-function MemberRow({ member, bio }: { member: ChannelMember; bio?: string }) {
+function initialsFor(name: string) {
+  return name.trim().slice(0, 2).toUpperCase() || '??'
+}
+
+function MemberRow({ member }: { member: SpaceMember }) {
+  const displayName = member.profile?.displayName ?? 'Member'
+  const handle = member.profile?.handle ? `@${member.profile.handle}` : ''
   return (
     <View style={styles.memberListRow}>
-      <Avatar initials={member.initials} size="md" />
+      <Avatar initials={initialsFor(displayName)} size="md" />
       <View style={styles.memberInfo}>
         <View style={styles.memberTopRow}>
           <View style={styles.memberNames}>
-            <Text style={styles.memberName}>{member.displayName}</Text>
-            <Text style={styles.memberHandle}>{member.handle}</Text>
+            <Text style={styles.memberName}>{displayName}</Text>
+            {!!handle && <Text style={styles.memberHandle}>{handle}</Text>}
           </View>
           <Button title="Follow" size="sm" style={styles.followButton} />
         </View>
-        {bio && (
-          <Text style={styles.memberBio} numberOfLines={1}>
-            {bio}
-          </Text>
-        )}
+        <Text style={styles.memberBio} numberOfLines={1}>
+          {member.role === 'LEADER' ? 'Leader' : member.role === 'MODERATOR' ? 'Moderator' : 'Member'}
+        </Text>
       </View>
     </View>
   )
@@ -50,18 +62,40 @@ function MemberRow({ member, bio }: { member: ChannelMember; bio?: string }) {
 export default function SpaceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
-  const space = useMemo(() => SPACES.find(s => s.id === id), [id])
+  const showToast = useUIStore(s => s.showToast)
+  const currentUserId = useAuthStore(s => s.user?.id)
 
-  const joinedSpaceIds = useCommunityStore(s => s.joinedSpaceIds)
-  const joinSpace = useCommunityStore(s => s.joinSpace)
-  const leaveSpace = useCommunityStore(s => s.leaveSpace)
-  const isJoined = !!space && joinedSpaceIds.includes(space.id)
+  const { data: space, isLoading: isSpaceLoading } = useSpace(id ?? '')
+  const { data: members = [] } = useSpaceMembers(id ?? '')
+  const { mutateAsync: joinSpace, isPending: isJoining } = useJoinSpaceMutation()
+  const { mutateAsync: applyToSpace, isPending: isApplying } = useApplyToSpaceMutation()
+  const { mutateAsync: leaveSpace } = useLeaveSpaceMutation()
+
+  const isJoined = !!currentUserId && members.some(member => member.memberId === currentUserId)
+  const moderator = members.find(member => member.role === 'LEADER' || member.role === 'MODERATOR')
+  const otherMembers = members.filter(member => member !== moderator)
 
   const [tab, setTab] = useState<DetailTab>('trending')
   const [rulesVisible, setRulesVisible] = useState(false)
   const [leaveVisible, setLeaveVisible] = useState(false)
   const [showAllMembers, setShowAllMembers] = useState(false)
   const posts = space ? SPACE_POSTS[space.id] ?? [] : []
+  const guidelines = useMemo(
+    () =>
+      (space?.guidelines ?? '')
+        .split('.')
+        .map(rule => rule.trim())
+        .filter(Boolean),
+    [space?.guidelines],
+  )
+
+  if (isSpaceLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <Text style={styles.empty}>Loading space…</Text>
+      </SafeAreaView>
+    )
+  }
 
   if (!space) {
     return (
@@ -137,7 +171,8 @@ export default function SpaceDetailScreen() {
               />
             ) : (
               <Button
-                title="Join Space"
+                title={space.isPrivate ? 'Request to Join' : 'Join Space'}
+                loading={isJoining || isApplying}
                 style={[styles.actionButton, styles.joinButton]}
                 onPress={() => setRulesVisible(true)}
               />
@@ -177,7 +212,7 @@ export default function SpaceDetailScreen() {
                 <View style={styles.aboutDivider} />
 
                 <Text style={styles.aboutHeading}>Space Guidelines</Text>
-                {(space.guidelines ?? []).map((rule, i) => (
+                {guidelines.map((rule, i) => (
                   <View key={rule} style={styles.guidelineRow}>
                     <View style={styles.guidelineBubble}>
                       <Text style={styles.guidelineNumber}>{i + 1}</Text>
@@ -186,28 +221,35 @@ export default function SpaceDetailScreen() {
                   </View>
                 ))}
 
-                {space.moderator && (
+                {moderator && (
                   <>
                     <View style={styles.aboutDivider} />
                     <Text style={styles.aboutHeading}>Moderated by</Text>
-                    <MemberRow member={space.moderator} />
+                    <MemberRow member={moderator} />
                   </>
                 )}
 
-                {!!space.members?.length && (
+                {!!otherMembers.length && (
                   <>
                     <View style={styles.aboutDivider} />
                     <Text style={styles.aboutHeading}>Members</Text>
-                    {(showAllMembers ? space.members : space.members.slice(0, 2)).map(member => (
-                      <MemberRow key={member.id} member={member} bio={member.bio} />
+                    {(showAllMembers ? otherMembers : otherMembers.slice(0, 2)).map(member => (
+                      <MemberRow key={member.memberId} member={member} />
                     ))}
-                    {space.members.length > 2 && (
+                    {otherMembers.length > 2 && (
                       <Pressable onPress={() => setShowAllMembers(v => !v)}>
                         <Text style={styles.seeMore}>{showAllMembers ? 'see less' : 'see more'}</Text>
                       </Pressable>
                     )}
+                    <Pressable onPress={() => router.push(`/(circles)/${space.id}/members`)}>
+                      <Text style={styles.seeMore}>Manage members</Text>
+                    </Pressable>
                   </>
                 )}
+
+                <Pressable onPress={() => router.push(`/(circles)/${space.id}/invite`)}>
+                  <Text style={styles.seeMore}>Invite someone to this space</Text>
+                </Pressable>
               </View>
             )}
           </View>
@@ -222,9 +264,20 @@ export default function SpaceDetailScreen() {
         visible={rulesVisible}
         space={space}
         onClose={() => setRulesVisible(false)}
-        onAgree={() => {
-          joinSpace(space.id)
-          setRulesVisible(false)
+        onAgree={async () => {
+          try {
+            if (space.isPrivate) {
+              await applyToSpace(space.id)
+              showToast('Your application has been sent for review.', 'success')
+            } else {
+              await joinSpace(space.id)
+            }
+          } catch (err) {
+            const message = err instanceof ApiError ? err.message : 'Could not join this space. Please try again.'
+            showToast(message, 'error')
+          } finally {
+            setRulesVisible(false)
+          }
         }}
       />
 
@@ -232,7 +285,14 @@ export default function SpaceDetailScreen() {
         visible={leaveVisible}
         spaceName={space.name}
         onClose={() => setLeaveVisible(false)}
-        onConfirmLeave={() => leaveSpace(space.id)}
+        onConfirmLeave={async () => {
+          try {
+            await leaveSpace(space.id)
+          } catch (err) {
+            const message = err instanceof ApiError ? err.message : 'Could not leave this space. Please try again.'
+            showToast(message, 'error')
+          }
+        }}
       />
     </SafeAreaView>
   )

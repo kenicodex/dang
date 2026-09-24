@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Icon } from '@/components/ui/Icon'
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 
@@ -7,6 +7,9 @@ import { Text } from '@/components/ui/Text'
 import { Button } from '@/components/ui/Button'
 import { FlowScreen } from '@/components/flow/FlowScreen'
 import { StepHeader } from '@/components/flow/StepHeader'
+import { ApiError } from '@/api/client'
+import { useRegisterMutation } from '@/api/hooks/auth.hooks'
+import { useUIStore } from '@/store/useUIStore'
 import { colors } from '@/theme/colors'
 
 type PlanKey = 'essential' | 'growth' | 'inner_circle'
@@ -68,6 +71,16 @@ function formatNaira(amount: number) {
 
 export default function PlanStepScreen() {
   const router = useRouter()
+  const params = useLocalSearchParams<{
+    email?: string
+    password?: string
+    name?: string
+    city?: string
+    industry?: string
+    faithTradition?: string
+  }>()
+  const { mutateAsync: register, isPending: isLoading } = useRegisterMutation()
+  const showToast = useUIStore(s => s.showToast)
   const [planKey, setPlanKey] = useState<PlanKey>('growth')
   const [cycle, setCycle] = useState<BillingCycle>('yearly')
 
@@ -75,7 +88,26 @@ export default function PlanStepScreen() {
   const yearly = Math.round(plan.monthly * 12 * 0.8)
   const yearlyMonthlyEquivalent = Math.round(yearly / 12)
 
-  const goNext = () => router.push('/(onboarding)/welcome')
+  const goNext = async () => {
+    if (!params.email || !params.password || !params.name) {
+      router.push('/(onboarding)/welcome')
+      return
+    }
+    try {
+      await register({
+        email: params.email,
+        password: params.password,
+        displayName: params.name,
+        city: params.city,
+        industry: params.industry,
+        faithTradition: params.faithTradition,
+      })
+      router.push('/(onboarding)/welcome')
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Could not create your account. Please try again.'
+      showToast(message, 'error')
+    }
+  }
 
   return (
     <FlowScreen>
@@ -178,7 +210,13 @@ export default function PlanStepScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button title={`Continue with ${plan.label}`} size="lg" style={styles.cta} onPress={goNext} />
+        <Button
+          title={`Continue with ${plan.label}`}
+          size="lg"
+          loading={isLoading}
+          style={styles.cta}
+          onPress={goNext}
+        />
         <Text style={styles.legal}>Cancel anytime. Plans auto-renew until cancelled.</Text>
       </View>
     </FlowScreen>

@@ -5,10 +5,11 @@ import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { SpaceCard } from "@/components/community/SpaceCard";
-import { CATEGORIES, SPACES } from "@/components/community/spaces.data";
+import { CATEGORIES } from "@/components/community/spaces.data";
 import { Avatar } from "@/components/ui/Avatar";
 import { Text } from "@/components/ui/Text";
 import { Tabs } from "@/components/ui/Tabs";
+import { useSpaces } from "@/api/hooks/spaces.hooks";
 import { useAuthStore, useCommunityStore, useUIStore } from "@/store";
 import { colors } from "@/theme/colors";
 
@@ -23,14 +24,15 @@ export default function SpacesScreen() {
   const [tab, setTab] = useState<Tab>("discover");
   const [category, setCategory] = useState("All");
 
+  const { data: spacesPage, isLoading } = useSpaces(
+    category === "All" ? undefined : { category },
+  );
+  const spaces = spacesPage?.items ?? [];
+
   const visibleSpaces = useMemo(() => {
-    const base =
-      tab === "mine"
-        ? SPACES.filter((s) => joinedSpaceIds.includes(s.id))
-        : SPACES;
-    if (category === "All") return base;
-    return base.filter((s) => s.category === category);
-  }, [tab, category, joinedSpaceIds]);
+    if (tab === "mine") return spaces.filter((s) => joinedSpaceIds.includes(s.id));
+    return spaces;
+  }, [tab, spaces, joinedSpaceIds]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -112,7 +114,10 @@ export default function SpacesScreen() {
             onPress={() => router.push(`/(community)/channel/${space.id}`)}
           />
         ))}
-        {visibleSpaces.length === 0 && (
+        {isLoading && (
+          <Text style={styles.empty}>Loading spaces…</Text>
+        )}
+        {!isLoading && visibleSpaces.length === 0 && (
           <Text style={styles.empty}>
             {tab === "mine"
               ? "You haven't joined any spaces yet."

@@ -14,6 +14,7 @@ import { Tabs } from '@/components/ui/Tabs'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PostCard } from '@/components/community'
 import { MOCK_PROFILE, PROFILE_MEDIA, PROFILE_POSTS, PROFILE_REPOSTS } from '@/components/account/profile.data'
+import { useMe } from '@/api/hooks/users.hooks'
 import { useAuthStore } from '@/store/useAuthStore'
 import { colors } from '@/theme/colors'
 import { shadows } from '@/theme/shadows'
@@ -34,6 +35,7 @@ function formatJoined(date: Date) {
 }
 
 export default function ProfileScreen() {
+  useMe()
   const authUser = useAuthStore(s => s.user)
   const profile = authUser ?? MOCK_PROFILE
   const [tab, setTab] = useState<ProfileTab>('posts')

@@ -6,9 +6,9 @@ import { Text } from '@/components/ui/Text'
 import { Button } from '@/components/ui/Button'
 import { FlowScreen } from '@/components/flow/FlowScreen'
 import { StepHeader } from '@/components/flow/StepHeader'
+import { useAuthStore } from '@/store/useAuthStore'
 import { colors } from '@/theme/colors'
 
-const FIRST_NAME = 'Amara'
 const MEMBERSHIP_LABEL = 'Growth Member'
 
 const NEXT_STEPS = [
@@ -35,6 +35,8 @@ const NEXT_STEPS = [
 
 export default function WelcomeStepScreen() {
   const router = useRouter()
+  const user = useAuthStore(s => s.user)
+  const firstName = user?.displayName?.split(' ')[0] ?? 'there'
 
   const goHome = () => router.replace('/(tabs)/home')
 
@@ -53,7 +55,7 @@ export default function WelcomeStepScreen() {
 
         <View style={styles.avatarArea}>
           <View style={styles.avatarCircle}>
-            <Text style={styles.avatarInitial}>{FIRST_NAME.charAt(0)}</Text>
+            <Text style={styles.avatarInitial}>{firstName.charAt(0).toUpperCase()}</Text>
           </View>
           <View style={styles.verifiedBadge}>
             <Icon name="checkmark" size={12} tintColor={colors.light.neutral.white} weight="bold" />
@@ -62,7 +64,7 @@ export default function WelcomeStepScreen() {
 
         <Text style={styles.welcomeText}>
           welcome,{'\n'}
-          <Text style={styles.welcomeName}>{FIRST_NAME}</Text>
+          <Text style={styles.welcomeName}>{firstName}</Text>
         </Text>
         <Text style={styles.subtitle}>
           You&rsquo;re officially in. Your sisters are waiting, and your first prayer is already

@@ -1,20 +1,30 @@
-import { useState } from 'react'
-import { useRouter } from 'expo-router'
-import { StyleSheet, View } from 'react-native'
+import { useRouter } from "expo-router";
+import { useMemo, useState } from "react";
+import { StyleSheet, View } from "react-native";
 
-import { Input } from '@/components/ui/Input'
-import { Text } from '@/components/ui/Text'
-import { FlowScreen } from '@/components/flow/FlowScreen'
-import { StepHeader } from '@/components/flow/StepHeader'
-import { NextFab } from '@/components/flow/NextFab'
-import { FooterNote } from '@/components/flow/FooterNote'
-import { colors } from '@/theme/colors'
+import { FlowScreen } from "@/components/flow/FlowScreen";
+import { FooterNote } from "@/components/flow/FooterNote";
+import { NextFab } from "@/components/flow/NextFab";
+import { StepHeader } from "@/components/flow/StepHeader";
+import { Input } from "@/components/ui/Input";
+import { Text } from "@/components/ui/Text";
+import { colors } from "@/theme/colors";
 
 export default function EmailSignUpScreen() {
-  const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const meetsPolicy = useMemo(
+    () =>
+      password.length >= 8 &&
+      /[a-z]/.test(password) &&
+      /[A-Z]/.test(password) &&
+      /\d/.test(password),
+    [password],
+  );
+  const canSubmit = !!email.trim() && meetsPolicy && password === confirmPassword;
 
   return (
     <FlowScreen>
@@ -23,7 +33,9 @@ export default function EmailSignUpScreen() {
       <View style={styles.container}>
         <Text style={styles.emoji}>📧</Text>
         <Text variant="h2">What&rsquo;s your email?</Text>
-        <Text style={styles.subtitle}>We&rsquo;ll send you a verification code to confirm it&rsquo;s you.</Text>
+        <Text style={styles.subtitle}>
+          We&rsquo;ll send you a verification code to confirm it&rsquo;s you.
+        </Text>
 
         <View style={styles.form}>
           <Input
@@ -47,7 +59,7 @@ export default function EmailSignUpScreen() {
             autoCorrect={false}
           />
           <Input
-            label="Create password"
+            label="Confirm password"
             required
             value={confirmPassword}
             onChangeText={setConfirmPassword}
@@ -55,22 +67,33 @@ export default function EmailSignUpScreen() {
             showPasswordToggle
             autoCapitalize="none"
             autoCorrect={false}
+            error={
+              confirmPassword && password !== confirmPassword
+                ? "Passwords do not match"
+                : undefined
+            }
           />
         </View>
       </View>
 
       <View style={styles.footer}>
-        <FooterNote icon="lock.fill">Your data is encrypted and secure</FooterNote>
+        <FooterNote icon="lock.fill">
+          Your data is encrypted and secure
+        </FooterNote>
         <View style={styles.fabRow}>
           <NextFab
+            disabled={!canSubmit}
             onPress={() =>
-              router.push({ pathname: '/(auth)/verify', params: { method: 'email', value: email } })
+              router.push({
+                pathname: "/(auth)/verify",
+                params: { method: "email", value: email, password },
+              })
             }
           />
         </View>
       </View>
     </FlowScreen>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -97,7 +120,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   fabRow: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
     marginTop: 16,
   },
-})
+});

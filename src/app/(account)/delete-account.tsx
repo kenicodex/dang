@@ -7,7 +7,9 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Text } from '@/components/ui/Text'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { DangFooter } from '@/components/account/DangFooter'
-import { useAuthStore } from '@/store/useAuthStore'
+import { ApiError } from '@/api/client'
+import { useDeleteAccountMutation } from '@/api/hooks/users.hooks'
+import { useUIStore } from '@/store/useUIStore'
 import { colors } from '@/theme/colors'
 
 const DELETED_ITEMS = [
@@ -20,12 +22,18 @@ const DELETED_ITEMS = [
 ]
 
 export default function DeleteAccountScreen() {
-  const logout = useAuthStore(s => s.logout)
+  const { mutateAsync: deleteAccount, isPending: isDeleting } = useDeleteAccountMutation()
+  const showToast = useUIStore(s => s.showToast)
   const [confirmed, setConfirmed] = useState(false)
 
-  const handleDelete = () => {
-    logout()
-    router.replace('/(auth)')
+  const handleDelete = async () => {
+    try {
+      await deleteAccount()
+      router.replace('/(auth)')
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Could not delete your account. Please try again.'
+      showToast(message, 'error')
+    }
   }
 
   return (
@@ -73,8 +81,12 @@ export default function DeleteAccountScreen() {
           <Text style={styles.keepAccountText}>Keep My Account</Text>
         </Pressable>
 
-        <Pressable style={[styles.deleteButton, !confirmed && styles.deleteButtonDisabled]} disabled={!confirmed} onPress={handleDelete}>
-          <Text style={styles.deleteButtonText}>Yes, Delete My Account</Text>
+        <Pressable
+          style={[styles.deleteButton, (!confirmed || isDeleting) && styles.deleteButtonDisabled]}
+          disabled={!confirmed || isDeleting}
+          onPress={handleDelete}
+        >
+          <Text style={styles.deleteButtonText}>{isDeleting ? 'Deleting…' : 'Yes, Delete My Account'}</Text>
         </Pressable>
 
         <DangFooter />

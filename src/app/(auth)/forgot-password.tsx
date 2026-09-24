@@ -9,14 +9,13 @@ import { Text } from '@/components/ui/Text'
 import { FlowScreen } from '@/components/flow/FlowScreen'
 import { StepHeader } from '@/components/flow/StepHeader'
 import { ApiError } from '@/api/client'
-import { useAuthStore } from '@/store/useAuthStore'
+import { useRequestPasswordResetMutation } from '@/api/hooks/auth.hooks'
 import { useUIStore } from '@/store/useUIStore'
 import { colors } from '@/theme/colors'
 
 export default function ForgotPasswordScreen() {
   const router = useRouter()
-  const requestPasswordReset = useAuthStore(s => s.requestPasswordReset)
-  const isLoading = useAuthStore(s => s.isLoading)
+  const { mutateAsync: requestPasswordReset, isPending: isLoading } = useRequestPasswordResetMutation()
   const showToast = useUIStore(s => s.showToast)
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)

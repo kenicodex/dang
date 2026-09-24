@@ -8,6 +8,9 @@ import { Text } from '@/components/ui/Text'
 import { Button } from '@/components/ui/Button'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { DangFooter } from '@/components/account/DangFooter'
+import { ApiError } from '@/api/client'
+import { useExportMyDataMutation } from '@/api/hooks/users.hooks'
+import { useUIStore } from '@/store/useUIStore'
 import { colors } from '@/theme/colors'
 
 interface ExportItem {
@@ -32,6 +35,8 @@ const DEFAULT_SELECTED = ['profile', 'posts', 'comments', 'messages', 'payment-h
 export default function DataPortabilityScreen() {
   const [selected, setSelected] = useState<string[]>(DEFAULT_SELECTED)
   const [confirmed, setConfirmed] = useState(false)
+  const showToast = useUIStore(s => s.showToast)
+  const { mutateAsync: exportMyData, isPending: isExporting } = useExportMyDataMutation()
 
   const allSelected = selected.length === EXPORT_ITEMS.length
 
@@ -41,6 +46,17 @@ export default function DataPortabilityScreen() {
 
   const toggleSelectAll = () => {
     setSelected(allSelected ? [] : EXPORT_ITEMS.map(item => item.id))
+  }
+
+  const handleExport = async () => {
+    try {
+      await exportMyData(selected)
+      showToast('Your data export is ready. Check your email for the download link.', 'success')
+      router.back()
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Could not export your data. Please try again.'
+      showToast(message, 'error')
+    }
   }
 
   return (
@@ -133,8 +149,9 @@ export default function DataPortabilityScreen() {
         <Button
           title="Export All"
           disabled={!confirmed || selected.length === 0}
+          loading={isExporting}
           style={styles.exportButton}
-          onPress={() => router.back()}
+          onPress={handleExport}
         />
 
         <DangFooter />

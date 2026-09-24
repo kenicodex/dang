@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Icon } from '@/components/ui/Icon'
 import { StyleSheet, TextInput, View } from 'react-native'
 
@@ -12,6 +12,7 @@ import { colors } from '@/theme/colors'
 
 export default function LocationStepScreen() {
   const router = useRouter()
+  const params = useLocalSearchParams<{ email?: string; password?: string; name?: string }>()
   const [city, setCity] = useState('')
 
   return (
@@ -40,7 +41,11 @@ export default function LocationStepScreen() {
       <View style={styles.footer}>
         <FooterNote icon="lock.shield.fill">Only your city is shown, never your address</FooterNote>
         <View style={styles.fabRow}>
-          <NextFab onPress={() => router.push('/(onboarding)/field')} />
+          <NextFab
+            onPress={() =>
+              router.push({ pathname: '/(onboarding)/field', params: { ...params, city } })
+            }
+          />
         </View>
       </View>
     </FlowScreen>

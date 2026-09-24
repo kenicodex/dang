@@ -1,50 +1,19 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react'
-import { View, Text, StyleSheet, Animated, Dimensions, Platform } from 'react-native'
+import { View, Text, StyleSheet, Dimensions, Platform } from 'react-native'
 
-type ToastType = 'success' | 'error' | 'info' | 'warning'
+import { useUIStore } from '@/store/useUIStore'
 
-interface ToastData {
-  id: string
-  message: string
-  type: ToastType
-  duration?: number
-}
-
-interface ToastContextValue {
-  show: (message: string, type?: ToastType, duration?: number) => void
-}
-
-const ToastContext = createContext<ToastContextValue | null>(null)
-
-export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<ToastData[]>([])
-
-  const show = useCallback((message: string, type: ToastType = 'info', duration = 3000) => {
-    const id = Math.random().toString(36).slice(2)
-    setToasts(prev => [...prev, { id, message, type, duration }])
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id))
-    }, duration)
-  }, [])
+export function ToastHost() {
+  const toasts = useUIStore(s => s.toasts)
 
   return (
-    <ToastContext.Provider value={{ show }}>
-      {children}
-      <View style={styles.container} pointerEvents="none">
-        {toasts.map(toast => (
-          <View key={toast.id} style={[styles.toast, styles[`type_${toast.type}`]]}>
-            <Text style={styles.toastText}>{toast.message}</Text>
-          </View>
-        ))}
-      </View>
-    </ToastContext.Provider>
+    <View style={styles.container} pointerEvents="none">
+      {toasts.map(toast => (
+        <View key={toast.id} style={[styles.toast, styles[`type_${toast.type}`]]}>
+          <Text style={styles.toastText}>{toast.message}</Text>
+        </View>
+      ))}
+    </View>
   )
-}
-
-export function useToast() {
-  const ctx = useContext(ToastContext)
-  if (!ctx) throw new Error('useToast must be used within ToastProvider')
-  return ctx
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
