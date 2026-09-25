@@ -8,32 +8,34 @@ import { Text } from '@/components/ui/Text'
 import { PostDetail } from '@/components/community/PostDetail'
 import { ReplyItem } from '@/components/community/ReplyItem'
 import { ReplyComposerBar } from '@/components/community/ReplyComposerBar'
-import { findPostById, getRepliesForPost } from '@/components/community/mockData'
-import { useAuthStore } from '@/store'
+import { toLegacyPost, buildReplyTree } from '@/components/community/postAdapters'
+import { ApiError } from '@/api/client'
+import { useAddReactionMutation, useCreatePostMutation, usePostThread, useRemoveReactionMutation } from '@/api/hooks/posts.hooks'
+import { useAuthStore, useUIStore } from '@/store'
 import { colors } from '@/theme/colors'
 import type { Reply } from '@/types/community'
-
-function updateReplyTree(replies: Reply[], targetId: string, update: (reply: Reply) => Reply): Reply[] {
-  return replies.map(reply => {
-    if (reply.id === targetId) return update(reply)
-    if (reply.replies?.length) {
-      return { ...reply, replies: updateReplyTree(reply.replies, targetId, update) }
-    }
-    return reply
-  })
-}
 
 export default function PostDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const user = useAuthStore(s => s.user)
+  const showToast = useUIStore(s => s.showToast)
 
-  const initialPost = useMemo(() => findPostById(id), [id])
-  const [post, setPost] = useState(initialPost)
-  const [replies, setReplies] = useState<Reply[]>(() => getRepliesForPost(id ?? ''))
+  const { data: thread, refetch } = usePostThread(id ?? '')
+  const { mutate: addReaction } = useAddReactionMutation()
+  const { mutate: removeReaction } = useRemoveReactionMutation()
+  const { mutateAsync: createPost } = useCreatePostMutation()
+
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set())
   const [replyTarget, setReplyTarget] = useState<Reply | null>(null)
 
-  if (!post) {
+  const post = useMemo(() => (thread ? toLegacyPost(thread.post, likedIds) : undefined), [thread, likedIds])
+  const replies = useMemo(
+    () => (thread ? buildReplyTree(thread.post.id, thread.replies, likedIds) : []),
+    [thread, likedIds],
+  )
+
+  if (!post || !thread) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
@@ -50,43 +52,36 @@ export default function PostDetailScreen() {
     )
   }
 
-  const toggleReplyLike = (reply: Reply) => {
-    setReplies(prev =>
-      updateReplyTree(prev, reply.id, r => ({
-        ...r,
-        hasLiked: !r.hasLiked,
-        likeCount: r.hasLiked ? r.likeCount - 1 : r.likeCount + 1,
-      })),
-    )
+  const toggleLike = (postId: string) => {
+    setLikedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(postId)) {
+        next.delete(postId)
+        removeReaction({ id: postId, type: 'LIKE' })
+      } else {
+        next.add(postId)
+        addReaction({ id: postId, type: 'LIKE' })
+      }
+      return next
+    })
   }
 
-  const handleSubmitReply = (content: string) => {
-    const newReply: Reply = {
-      id: `local-reply-${Date.now()}`,
-      postId: post.id,
-      parentReplyId: replyTarget?.id,
-      author: { id: 'me', displayName: user?.displayName ?? 'You', handle: '@me' },
-      content,
-      isAnonymous: false,
-      likeCount: 0,
-      timeAgo: 'now',
-      createdAt: new Date(),
-      updatedAt: new Date(),
+  const handleSubmitReply = async (content: string) => {
+    try {
+      await createPost({
+        spaceId: thread.post.spaceId,
+        parentId: replyTarget?.id ?? thread.post.id,
+        contentType: 'TEXT',
+        body: content,
+        isAnonymous: false,
+      })
+      await refetch()
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Could not post your reply. Please try again.'
+      showToast(message, 'error')
+    } finally {
+      setReplyTarget(null)
     }
-
-    if (replyTarget) {
-      setReplies(prev =>
-        updateReplyTree(prev, replyTarget.id, r => ({
-          ...r,
-          replies: [...(r.replies ?? []), newReply],
-        })),
-      )
-    } else {
-      setReplies(prev => [...prev, newReply])
-    }
-
-    setPost(p => (p ? { ...p, replyCount: p.replyCount + 1 } : p))
-    setReplyTarget(null)
   }
 
   return (
@@ -109,13 +104,9 @@ export default function PostDetailScreen() {
         <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <PostDetail
             post={post}
-            onLike={() =>
-              setPost(p =>
-                p ? { ...p, hasLiked: !p.hasLiked, likeCount: p.hasLiked ? p.likeCount - 1 : p.likeCount + 1 } : p,
-              )
-            }
+            onLike={() => toggleLike(post.id)}
             onReply={() => setReplyTarget(null)}
-            onBookmark={() => setPost(p => (p ? { ...p, hasBookmarked: !p.hasBookmarked } : p))}
+            onBookmark={() => {}}
           />
 
           <View style={styles.divider} />
@@ -126,7 +117,7 @@ export default function PostDetailScreen() {
                 <ReplyItem
                   key={reply.id}
                   reply={reply}
-                  onLike={toggleReplyLike}
+                  onLike={r => toggleLike(r.id)}
                   onReply={setReplyTarget}
                 />
               ))

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { router } from 'expo-router'
 import { Icon } from '@/components/ui/Icon'
@@ -8,8 +8,19 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Text } from '@/components/ui/Text'
 import { FilterChips, Tabs, type FilterChip } from '@/components/ui'
 import { PostCard, RejectionSheet } from '@/components/community'
-import { FOR_YOU_POSTS, MY_POSTS } from '@/components/community/mockData'
+import { toLegacyPost } from '@/components/community/postAdapters'
+import { ApiError } from '@/api/client'
+import {
+  useAddReactionMutation,
+  useDeletePostMutation,
+  useFeed,
+  useMyPosts,
+  useRemoveReactionMutation,
+  useRepostMutation,
+} from '@/api/hooks/posts.hooks'
+import type { PostModerationStatus as ApiPostModerationStatus } from '@/api/services/posts.service'
 import { useAuthStore } from '@/store/useAuthStore'
+import { useUIStore } from '@/store/useUIStore'
 import { colors } from '@/theme/colors'
 import { shadows } from '@/theme/shadows'
 import type { Post, PostModerationStatus } from '@/types/community'
@@ -24,17 +35,60 @@ const STATUS_CHIPS: FilterChip<StatusFilter>[] = [
   { value: 'rejected', label: 'Rejected' },
 ]
 
+const STATUS_TO_API: Record<PostModerationStatus, ApiPostModerationStatus> = {
+  pending: 'PENDING',
+  approved: 'PUBLISHED',
+  rejected: 'REJECTED',
+}
+
 export default function FeedScreen() {
   const user = useAuthStore(s => s.user)
+  const showToast = useUIStore(s => s.showToast)
   const firstName = user?.displayName?.split(' ')[0] ?? 'Amy'
   const [tab, setTab] = useState<FeedTab>('forYou')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
-  const [myPosts, setMyPosts] = useState<Post[]>(MY_POSTS)
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set())
   const [rejectedPost, setRejectedPost] = useState<Post | null>(null)
 
-  const visibleMyPosts = myPosts.filter(
-    post => statusFilter === 'all' || post.moderationStatus === statusFilter,
+  const { data: feedPage } = useFeed({ sort: 'NEW' })
+  const { data: myApiPosts = [] } = useMyPosts(statusFilter === 'all' ? undefined : STATUS_TO_API[statusFilter])
+  const { mutate: addReaction } = useAddReactionMutation()
+  const { mutate: removeReaction } = useRemoveReactionMutation()
+  const { mutateAsync: repost } = useRepostMutation()
+  const { mutateAsync: deletePost } = useDeletePostMutation()
+
+  const forYouPosts = useMemo(
+    () => (feedPage?.items ?? []).map(post => toLegacyPost(post, likedIds)),
+    [feedPage, likedIds],
   )
+  const visibleMyPosts = useMemo(
+    () => myApiPosts.map(post => toLegacyPost(post, likedIds)),
+    [myApiPosts, likedIds],
+  )
+
+  const toggleLike = (post: Post) => {
+    setLikedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(post.id)) {
+        next.delete(post.id)
+        removeReaction({ id: post.id, type: 'LIKE' })
+      } else {
+        next.add(post.id)
+        addReaction({ id: post.id, type: 'LIKE' })
+      }
+      return next
+    })
+  }
+
+  const handleRepost = async (post: Post) => {
+    try {
+      await repost({ id: post.id })
+      showToast('Reposted.', 'success')
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Could not repost. Please try again.'
+      showToast(message, 'error')
+    }
+  }
 
   const handlePostPress = (post: Post) => {
     if (post.moderationStatus === 'rejected') {
@@ -69,15 +123,15 @@ export default function FeedScreen() {
           <FilterChips chips={STATUS_CHIPS} value={statusFilter} onChange={setStatusFilter} />
         )}
 
-        {(tab === 'forYou' ? FOR_YOU_POSTS : visibleMyPosts).map(post => (
+        {(tab === 'forYou' ? forYouPosts : visibleMyPosts).map(post => (
           <PostCard
             key={post.id}
             post={post}
             showStatus={tab === 'myPosts'}
             onPress={() => handlePostPress(post)}
-            onLike={() => {}}
-            onReply={() => {}}
-            onRepost={() => {}}
+            onLike={() => toggleLike(post)}
+            onReply={() => handlePostPress(post)}
+            onRepost={() => handleRepost(post)}
             onBookmark={() => {}}
             onShare={() => {}}
           />
@@ -92,8 +146,15 @@ export default function FeedScreen() {
         visible={!!rejectedPost}
         onClose={() => setRejectedPost(null)}
         reason={rejectedPost?.rejectionReason ?? ''}
-        onDelete={() => {
-          setMyPosts(posts => posts.filter(p => p.id !== rejectedPost?.id))
+        onDelete={async () => {
+          if (rejectedPost) {
+            try {
+              await deletePost(rejectedPost.id)
+            } catch (err) {
+              const message = err instanceof ApiError ? err.message : 'Could not delete this post.'
+              showToast(message, 'error')
+            }
+          }
           setRejectedPost(null)
         }}
         onEdit={() => {

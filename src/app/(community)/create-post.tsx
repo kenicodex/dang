@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import { Icon } from '@/components/ui/Icon'
@@ -7,7 +7,10 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { Text } from '@/components/ui/Text'
 import { AudienceSheet, ALL_SISTERS, RichTextToolbar, type TextFormat } from '@/components/community'
-import { MOCK_COMMUNITIES } from '@/components/community/mockData'
+import { ApiError } from '@/api/client'
+import { useSpaces } from '@/api/hooks/spaces.hooks'
+import { useCreatePostMutation } from '@/api/hooks/posts.hooks'
+import { useUIStore } from '@/store'
 import { colors } from '@/theme/colors'
 
 const MAX_LENGTH = 1000
@@ -32,17 +35,42 @@ const PLACEHOLDER_TEXT: Partial<Record<TextFormat, string>> = {
 
 export default function CreatePostScreen() {
   const { slug } = useLocalSearchParams<{ slug?: string }>()
+  const showToast = useUIStore(s => s.showToast)
+  const { data: spacesPage } = useSpaces()
+  const spaces = spacesPage?.items ?? []
+  const { mutateAsync: createPost, isPending: isPosting } = useCreatePostMutation()
+
   const [content, setContent] = useState('')
   const [selection, setSelection] = useState({ start: 0, end: 0 })
-  const [communityId, setCommunityId] = useState(
-    MOCK_COMMUNITIES.find(c => c.slug === slug)?.id ?? MOCK_COMMUNITIES[0]?.id ?? ALL_SISTERS,
-  )
+  const [communityId, setCommunityId] = useState<string>(ALL_SISTERS)
   const [audienceVisible, setAudienceVisible] = useState(false)
   const [isAnonymous, setIsAnonymous] = useState(false)
 
-  const community = MOCK_COMMUNITIES.find(c => c.id === communityId)
-  const audienceLabel = communityId === ALL_SISTERS ? 'All Sisters' : community?.name ?? 'Choose a space'
-  const canPost = content.trim().length > 0
+  useEffect(() => {
+    if (communityId !== ALL_SISTERS || spaces.length === 0) return
+    const match = spaces.find(s => s.id === slug || s.slug === slug) ?? spaces[0]
+    if (match) setCommunityId(match.id)
+  }, [spaces, slug, communityId])
+
+  const community = spaces.find(c => c.id === communityId)
+  const audienceLabel = communityId === ALL_SISTERS ? 'Choose a space' : community?.name ?? 'Choose a space'
+  const canPost = content.trim().length > 0 && communityId !== ALL_SISTERS
+
+  const handlePost = async () => {
+    if (communityId === ALL_SISTERS) return
+    try {
+      await createPost({
+        spaceId: communityId,
+        contentType: 'TEXT',
+        body: content.trim(),
+        isAnonymous,
+      })
+      router.back()
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Could not create this post. Please try again.'
+      showToast(message, 'error')
+    }
+  }
 
   const applyFormat = (format: TextFormat) => {
     const { start, end } = selection
@@ -72,11 +100,11 @@ export default function CreatePostScreen() {
         </Pressable>
         <Text variant="h3">Create Post</Text>
         <Pressable
-          style={[styles.postButton, !canPost && styles.postButtonDisabled]}
-          disabled={!canPost}
-          onPress={() => router.back()}
+          style={[styles.postButton, (!canPost || isPosting) && styles.postButtonDisabled]}
+          disabled={!canPost || isPosting}
+          onPress={handlePost}
         >
-          <Text style={styles.postButtonText}>Post</Text>
+          <Text style={styles.postButtonText}>{isPosting ? 'Posting…' : 'Post'}</Text>
         </Pressable>
       </View>
 
@@ -123,7 +151,7 @@ export default function CreatePostScreen() {
       <AudienceSheet
         visible={audienceVisible}
         onClose={() => setAudienceVisible(false)}
-        communities={MOCK_COMMUNITIES}
+        communities={spaces}
         selectedId={communityId}
         onSelect={id => {
           setCommunityId(id)

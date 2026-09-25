@@ -13,8 +13,10 @@ import { GlassView } from '@/components/ui/GlassView'
 import { Tabs } from '@/components/ui/Tabs'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PostCard } from '@/components/community'
-import { MOCK_PROFILE, PROFILE_MEDIA, PROFILE_POSTS, PROFILE_REPOSTS } from '@/components/account/profile.data'
+import { toLegacyPost } from '@/components/community/postAdapters'
+import { MOCK_PROFILE } from '@/components/account/profile.data'
 import { useMe } from '@/api/hooks/users.hooks'
+import { useUserPosts, useUserReposts } from '@/api/hooks/posts.hooks'
 import { useAuthStore } from '@/store/useAuthStore'
 import { colors } from '@/theme/colors'
 import { shadows } from '@/theme/shadows'
@@ -39,6 +41,20 @@ export default function ProfileScreen() {
   const authUser = useAuthStore(s => s.user)
   const profile = authUser ?? MOCK_PROFILE
   const [tab, setTab] = useState<ProfileTab>('posts')
+
+  const { data: postsPage } = useUserPosts(profile.id, { tab: 'posts' })
+  const { data: mediaPage } = useUserPosts(profile.id, { tab: 'media' })
+  const { data: reposts = [] } = useUserReposts(profile.id)
+
+  const profilePosts = (postsPage?.items ?? []).map(post => toLegacyPost(post))
+  const profileReposts = reposts.map(post => toLegacyPost(post))
+  const profileMedia = (mediaPage?.items ?? [])
+    .filter(post => !!post.mediaUrl)
+    .map(post => ({
+      id: post.id,
+      url: post.mediaUrl as string,
+      type: post.contentType === 'VIDEO' ? ('video' as const) : ('image' as const),
+    }))
 
   const handlePostPress = (post: Post) => router.push(`/(community)/thread/${post.id}`)
 
@@ -149,10 +165,10 @@ export default function ProfileScreen() {
 
         <View style={styles.tabContent}>
           {tab === 'posts' &&
-            (PROFILE_POSTS.length === 0 ? (
+            (profilePosts.length === 0 ? (
               <EmptyState title="No post yet 🌱" />
             ) : (
-              PROFILE_POSTS.map(post => (
+              profilePosts.map(post => (
                 <PostCard
                   key={post.id}
                   post={post}
@@ -167,10 +183,10 @@ export default function ProfileScreen() {
             ))}
 
           {tab === 'reposts' &&
-            (PROFILE_REPOSTS.length === 0 ? (
+            (profileReposts.length === 0 ? (
               <EmptyState title="No reposts yet" />
             ) : (
-              PROFILE_REPOSTS.map(post => (
+              profileReposts.map(post => (
                 <View key={post.id} style={styles.repostWrap}>
                   <View style={styles.repostLabelRow}>
                     <Icon name="arrow.2.squarepath" size={13} tintColor={colors.light.textSoft} />
@@ -190,11 +206,11 @@ export default function ProfileScreen() {
             ))}
 
           {tab === 'media' &&
-            (PROFILE_MEDIA.length === 0 ? (
+            (profileMedia.length === 0 ? (
               <EmptyState title="No media yet" />
             ) : (
               <View style={styles.mediaGrid}>
-                {PROFILE_MEDIA.map(item => (
+                {profileMedia.map(item => (
                   <View key={item.id} style={styles.mediaTile}>
                     <Image source={{ uri: item.url }} style={styles.mediaImage} contentFit="cover" />
                     {item.type === 'video' && (

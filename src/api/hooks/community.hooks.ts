@@ -54,15 +54,3 @@ export function useCreateThread() {
     },
   })
 }
-
-export function useCreatePost() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: communityApi.createPost,
-    onSuccess: post => {
-      if (post.threadId) {
-        queryClient.invalidateQueries({ queryKey: communityKeys.thread(post.threadId) })
-      }
-    },
-  })
-}

@@ -5,14 +5,14 @@ import { Icon } from '@/components/ui/Icon'
 import { Sheet } from '@/components/ui/Sheet'
 import { Text } from '@/components/ui/Text'
 import { colors } from '@/theme/colors'
-import type { Circle } from '@/types/circles'
+import type { Space } from '@/api/services/spaces.service'
 
 export const ALL_SISTERS = 'all-sisters'
 
 interface AudienceSheetProps {
   visible: boolean
   onClose: () => void
-  communities: Circle[]
+  communities: Space[]
   selectedId: string
   onSelect: (id: string) => void
 }
@@ -39,8 +39,8 @@ export function AudienceSheet({ visible, onClose, communities, selectedId, onSel
             selected={selectedId === community.id}
             onPress={() => onSelect(community.id)}
             icon={
-              community.coverUrl ? (
-                <Image source={{ uri: community.coverUrl }} style={styles.cover} />
+              community.coverImageUrl ? (
+                <Image source={{ uri: community.coverImageUrl }} style={styles.cover} />
               ) : (
                 <View style={styles.coverFallback}>
                   <Text style={styles.coverEmoji}>{community.emoji || '👥'}</Text>

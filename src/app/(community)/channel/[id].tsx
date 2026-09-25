@@ -13,7 +13,8 @@ import { Tabs } from '@/components/ui/Tabs'
 import { PostCard } from '@/components/community/PostCard'
 import { JoinSpaceModal } from '@/components/community/JoinSpaceModal'
 import { LeaveSpaceSheet } from '@/components/community/LeaveSpaceSheet'
-import { CATEGORY_STYLE, SPACE_POSTS } from '@/components/community/spaces.data'
+import { CATEGORY_STYLE } from '@/components/community/spaces.data'
+import { toLegacyPost } from '@/components/community/postAdapters'
 import { ApiError } from '@/api/client'
 import {
   useApplyToSpaceMutation,
@@ -22,6 +23,7 @@ import {
   useSpace,
   useSpaceMembers,
 } from '@/api/hooks/spaces.hooks'
+import { useAddReactionMutation, useRemoveReactionMutation, useSpacePosts } from '@/api/hooks/posts.hooks'
 import type { SpaceMember } from '@/api/services/spaces.service'
 import { useAuthStore, useUIStore } from '@/store'
 import { colors } from '@/theme/colors'
@@ -79,7 +81,31 @@ export default function SpaceDetailScreen() {
   const [rulesVisible, setRulesVisible] = useState(false)
   const [leaveVisible, setLeaveVisible] = useState(false)
   const [showAllMembers, setShowAllMembers] = useState(false)
-  const posts = space ? SPACE_POSTS[space.id] ?? [] : []
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set())
+
+  const { data: spacePostsPage } = useSpacePosts(space?.id ?? '', { sort: 'NEW' })
+  const { mutate: addReaction } = useAddReactionMutation()
+  const { mutate: removeReaction } = useRemoveReactionMutation()
+
+  const posts = useMemo(
+    () => (spacePostsPage?.items ?? []).map(post => toLegacyPost(post, likedIds)),
+    [spacePostsPage, likedIds],
+  )
+  const mediaPosts = posts.filter(post => post.attachments?.length)
+
+  const toggleLike = (postId: string) => {
+    setLikedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(postId)) {
+        next.delete(postId)
+        removeReaction({ id: postId, type: 'LIKE' })
+      } else {
+        next.add(postId)
+        addReaction({ id: postId, type: 'LIKE' })
+      }
+      return next
+    })
+  }
   const guidelines = useMemo(
     () =>
       (space?.guidelines ?? '')
@@ -192,12 +218,14 @@ export default function SpaceDetailScreen() {
 
           <View style={styles.tabContent}>
             {(tab === 'trending' || tab === 'media') &&
-              (posts.length > 0 ? (
-                posts.map(post => (
+              ((tab === 'trending' ? posts : mediaPosts).length > 0 ? (
+                (tab === 'trending' ? posts : mediaPosts).map(post => (
                 <PostCard
                   key={post.id}
                   post={post}
                   onPress={() => router.push(`/(community)/thread/${post.id}`)}
+                  onLike={() => toggleLike(post.id)}
+                  onReply={() => router.push(`/(community)/thread/${post.id}`)}
                 />
               ))
               ) : (
