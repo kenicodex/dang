@@ -1,48 +1,17 @@
 import { useRouter } from 'expo-router'
 import { Image } from 'expo-image'
-import * as AppleAuthentication from 'expo-apple-authentication'
 import { Icon } from '@/components/ui/Icon'
 import { StyleSheet, View } from 'react-native'
 
 import { Button } from '@/components/ui/Button'
 import { Text } from '@/components/ui/Text'
 import { FlowScreen } from '@/components/flow/FlowScreen'
-import { ApiError } from '@/api/client'
-import { useLoginWithAppleMutation } from '@/api/hooks/auth.hooks'
-import { useUIStore } from '@/store/useUIStore'
+import { useOAuthSignIn } from '@/hooks/use-oauth-sign-in'
 import { colors } from '@/theme/colors'
 
 export default function SignUpScreen() {
   const router = useRouter()
-  const { mutateAsync: loginWithApple } = useLoginWithAppleMutation()
-  const showToast = useUIStore(s => s.showToast)
-
-  const handleAppleSignIn = async () => {
-    try {
-      const nonce = Math.random().toString(36).slice(2)
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
-        nonce,
-      })
-      if (!credential.identityToken) throw new Error('Apple did not return an identity token.')
-      const displayName = credential.fullName?.givenName
-        ? `${credential.fullName.givenName} ${credential.fullName.familyName ?? ''}`.trim()
-        : undefined
-      await loginWithApple({ identityToken: credential.identityToken, nonce, displayName })
-      router.replace('/home')
-    } catch (err: any) {
-      if (err?.code === 'ERR_REQUEST_CANCELED') return
-      const message = err instanceof ApiError ? err.message : 'Apple sign-in failed. Please try again.'
-      showToast(message, 'error')
-    }
-  }
-
-  const handleGoogleSignIn = () => {
-    showToast('Google sign-in is not configured yet.', 'info')
-  }
+  const { handleAppleSignIn, handleGoogleSignIn, isLoading } = useOAuthSignIn()
 
   return (
     <FlowScreen>
@@ -89,6 +58,7 @@ export default function SignUpScreen() {
             title="Continue with Apple"
             variant="outline"
             size="lg"
+            loading={isLoading}
             icon={<Icon name="apple.logo" size={18} tintColor={colors.light.text} />}
             onPress={handleAppleSignIn}
           />
@@ -96,6 +66,7 @@ export default function SignUpScreen() {
             title="Continue with Google"
             variant="outline"
             size="lg"
+            loading={isLoading}
             icon={
               <Image
                 source={require('@/assets/images/google-logo.svg')}

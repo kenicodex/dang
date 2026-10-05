@@ -27,6 +27,10 @@ const VARIANT_CONFIG: Record<Variant, { name: string; iosBundleId: string; andro
 
 const variant = VARIANT_CONFIG[VARIANT]
 
+// The Google Sign-In plugin hard-fails prebuild without a real reversed iOS client
+// ID, so only include it once that's actually been configured.
+const googleIosUrlScheme = process.env.EXPO_PUBLIC_GOOGLE_IOS_URL_SCHEME
+
 const config: ExpoConfig = {
   name: variant.name,
   slug: 'dang',
@@ -77,15 +81,16 @@ const config: ExpoConfig = {
         cameraPermission: 'Allow $(PRODUCT_NAME) to access your camera so you can take a profile picture.',
       },
     ],
-    [
-      '@react-native-google-signin/google-signin',
-      {
-        // Reversed iOS OAuth client ID from Google Cloud Console, e.g.
-        // "com.googleusercontent.apps.1234567890-abcdef". Required for native
-        // Google Sign-In to redirect back into the app on iOS.
-        iosUrlScheme: process.env.EXPO_PUBLIC_GOOGLE_IOS_URL_SCHEME ?? '',
-      },
-    ],
+    ...(googleIosUrlScheme
+      ? [
+          [
+            '@react-native-google-signin/google-signin',
+            // Reversed iOS OAuth client ID from Google Cloud Console, e.g.
+            // "com.googleusercontent.apps.1234567890-abcdef".
+            { iosUrlScheme: googleIosUrlScheme },
+          ] as const,
+        ]
+      : []),
   ],
   experiments: {
     typedRoutes: true,

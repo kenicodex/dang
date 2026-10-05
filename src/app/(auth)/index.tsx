@@ -6,10 +6,12 @@ import { StyleSheet, View } from 'react-native'
 import { Button } from '@/components/ui/Button'
 import { Text } from '@/components/ui/Text'
 import { FlowScreen } from '@/components/flow/FlowScreen'
+import { useOAuthSignIn } from '@/hooks/use-oauth-sign-in'
 import { colors } from '@/theme/colors'
 
 export default function SignInChooserScreen() {
   const router = useRouter()
+  const { handleAppleSignIn, handleGoogleSignIn, isLoading } = useOAuthSignIn()
 
   return (
     <FlowScreen>
@@ -53,13 +55,15 @@ export default function SignInChooserScreen() {
             title="Continue with Apple"
             variant="outline"
             size="lg"
+            loading={isLoading}
             icon={<Icon name="apple.logo" size={18} tintColor={colors.light.text} />}
-            onPress={() => {}}
+            onPress={handleAppleSignIn}
           />
           <Button
             title="Continue with Google"
             variant="outline"
             size="lg"
+            loading={isLoading}
             icon={
               <Image
                 source={require('@/assets/images/google-logo.svg')}
@@ -67,7 +71,7 @@ export default function SignInChooserScreen() {
                 contentFit="contain"
               />
             }
-            onPress={() => {}}
+            onPress={handleGoogleSignIn}
           />
         </View>
 
