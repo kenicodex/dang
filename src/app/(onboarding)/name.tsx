@@ -11,7 +11,7 @@ import { colors } from '@/theme/colors'
 
 export default function NameStepScreen() {
   const router = useRouter()
-  const params = useLocalSearchParams<{ email?: string; password?: string }>()
+  const params = useLocalSearchParams<{ email?: string; password?: string; phone?: string }>()
   const [name, setName] = useState('')
 
   return (

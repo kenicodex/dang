@@ -1,5 +1,12 @@
 import { useRef } from 'react'
-import { NativeSyntheticEvent, TextInput, TextInputKeyPressEventData, View, StyleSheet } from 'react-native'
+import {
+  NativeSyntheticEvent,
+  TextInput,
+  TextInputKeyPressEventData,
+  View,
+  StyleSheet,
+  useWindowDimensions,
+} from 'react-native'
 
 import { colors } from '@/theme/colors'
 
@@ -8,10 +15,25 @@ interface OtpInputProps {
   value: string
   onChangeText: (value: string) => void
   autoFocus?: boolean
+  /** Horizontal space already consumed by the surrounding screen (padding on both sides). */
+  horizontalInset?: number
 }
 
-export function OtpInput({ length = 4, value, onChangeText, autoFocus }: OtpInputProps) {
+const MAX_BOX_SIZE = 56
+const MIN_BOX_SIZE = 40
+const MAX_GAP = 12
+const MIN_GAP = 6
+
+export function OtpInput({ length = 4, value, onChangeText, autoFocus, horizontalInset = 48 }: OtpInputProps) {
   const inputs = useRef<Array<TextInput | null>>([])
+  const { width: screenWidth } = useWindowDimensions()
+
+  const availableWidth = screenWidth - horizontalInset
+  const gap = Math.min(MAX_GAP, Math.max(MIN_GAP, (availableWidth - length * MIN_BOX_SIZE) / Math.max(length - 1, 1)))
+  const boxSize = Math.min(
+    MAX_BOX_SIZE,
+    Math.max(MIN_BOX_SIZE, (availableWidth - gap * (length - 1)) / length),
+  )
 
   const setDigit = (index: number, digit: string) => {
     const next = value.split('')
@@ -29,14 +51,18 @@ export function OtpInput({ length = 4, value, onChangeText, autoFocus }: OtpInpu
   }
 
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, { gap }]}>
       {Array.from({ length }).map((_, index) => {
         const digit = value[index] ?? ''
         return (
           <TextInput
             key={index}
             ref={ref => { inputs.current[index] = ref }}
-            style={[styles.box, digit && styles.boxFilled]}
+            style={[
+              styles.box,
+              { width: boxSize, height: boxSize, fontSize: boxSize * 0.4 },
+              digit && styles.boxFilled,
+            ]}
             value={digit}
             onChangeText={d => setDigit(index, d.replace(/[^0-9]/g, '').slice(-1))}
             onKeyPress={e => onKeyPress(index, e)}
@@ -54,16 +80,14 @@ export function OtpInput({ length = 4, value, onChangeText, autoFocus }: OtpInpu
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    gap: 12,
+    justifyContent: 'center',
+    alignSelf: 'stretch',
   },
   box: {
-    width: 56,
-    height: 56,
     borderRadius: 14,
     borderWidth: 1.5,
     borderColor: colors.light.border,
     backgroundColor: colors.light.surface,
-    fontSize: 22,
     fontWeight: '700',
     color: colors.light.text,
   },

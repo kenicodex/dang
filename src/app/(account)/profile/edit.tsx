@@ -15,6 +15,7 @@ import { ActionSheet } from '@/components/ui/ActionSheet'
 import { MOCK_PROFILE, PROFILE_INTERESTS } from '@/components/account/profile.data'
 import { ApiError } from '@/api/client'
 import { useHandleAvailability, useUpdateProfileMutation } from '@/api/hooks/users.hooks'
+import { pickImageFromCamera, pickImageFromLibrary } from '@/lib/imagePicker'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useUIStore } from '@/store/useUIStore'
 import { colors } from '@/theme/colors'
@@ -36,6 +37,23 @@ export default function EditProfileScreen() {
   const [bio, setBio] = useState(profile.bio ?? '')
   const [interests, setInterests] = useState<string[]>(profile.interests ?? [])
   const [photoSheetVisible, setPhotoSheetVisible] = useState(false)
+  const [photoUri, setPhotoUri] = useState<string | null>(null)
+
+  const handlePickFromLibrary = async () => {
+    const result = await pickImageFromLibrary()
+    if (result.status === 'success') setPhotoUri(result.uri)
+    else if (result.status === 'denied') {
+      showToast('Please allow photo library access in Settings to choose a photo.', 'error')
+    }
+  }
+
+  const handlePickFromCamera = async () => {
+    const result = await pickImageFromCamera()
+    if (result.status === 'success') setPhotoUri(result.uri)
+    else if (result.status === 'denied') {
+      showToast('Please allow camera access in Settings to take a photo.', 'error')
+    }
+  }
 
   const toggleInterest = (interest: string) => {
     setInterests(current => (current.includes(interest) ? current.filter(i => i !== interest) : [...current, interest]))
@@ -105,7 +123,7 @@ export default function EditProfileScreen() {
 
           <View style={styles.avatarSection}>
             <View style={styles.avatarWrap}>
-              <Avatar uri={profile.avatarUrl} initials={profile.displayName.slice(0, 2).toUpperCase()} size="xl" />
+              <Avatar uri={photoUri ?? profile.avatarUrl} initials={profile.displayName.slice(0, 2).toUpperCase()} size="xl" />
               <Pressable style={styles.cameraBadge} onPress={() => setPhotoSheetVisible(true)} hitSlop={4}>
                 <Icon name="camera.fill" size={14} tintColor={colors.light.neutral.white} />
               </Pressable>
@@ -174,9 +192,9 @@ export default function EditProfileScreen() {
         visible={photoSheetVisible}
         onClose={() => setPhotoSheetVisible(false)}
         actions={[
-          { label: 'Photo Library', onPress: () => {} },
-          { label: 'Camera', onPress: () => {} },
-          { label: 'Remove', onPress: () => {}, destructive: true },
+          { label: 'Photo Library', onPress: handlePickFromLibrary },
+          { label: 'Camera', onPress: handlePickFromCamera },
+          { label: 'Remove', onPress: () => setPhotoUri(null), destructive: true },
         ]}
       />
     </View>

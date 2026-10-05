@@ -24,7 +24,7 @@ export default function SignInScreen() {
       await login({ email: email.trim(), password });
       router.replace("/home");
     } catch (err) {
-      console.log(err);
+      console.log({ err });
       const message =
         err instanceof ApiError
           ? err.message

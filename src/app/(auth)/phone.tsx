@@ -1,46 +1,51 @@
-import { useState } from 'react'
-import { useRouter } from 'expo-router'
-import { Icon } from '@/components/ui/Icon'
-import { Pressable, StyleSheet, View } from 'react-native'
+import { Icon } from "@/components/ui/Icon";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
 
-import { Input } from '@/components/ui/Input'
-import { Text } from '@/components/ui/Text'
-import { Sheet } from '@/components/ui/Sheet'
-import { FlowScreen } from '@/components/flow/FlowScreen'
-import { StepHeader } from '@/components/flow/StepHeader'
-import { NextFab } from '@/components/flow/NextFab'
-import { FooterNote } from '@/components/flow/FooterNote'
-import { ApiError } from '@/api/client'
-import { useSendOtpMutation } from '@/api/hooks/auth.hooks'
-import { useUIStore } from '@/store/useUIStore'
-import { colors } from '@/theme/colors'
+import { ApiError } from "@/api/client";
+import { useSendOtpMutation } from "@/api/hooks/auth.hooks";
+import { FlowScreen } from "@/components/flow/FlowScreen";
+import { FooterNote } from "@/components/flow/FooterNote";
+import { NextFab } from "@/components/flow/NextFab";
+import { StepHeader } from "@/components/flow/StepHeader";
+import { Input } from "@/components/ui/Input";
+import { Sheet } from "@/components/ui/Sheet";
+import { Text } from "@/components/ui/Text";
+import { useUIStore } from "@/store/useUIStore";
+import { colors } from "@/theme/colors";
 
 const COUNTRIES = [
-  { flag: '🇳🇬', name: 'Nigeria', code: '+234' },
-  { flag: '🇬🇭', name: 'Ghana', code: '+233' },
-  { flag: '🇰🇪', name: 'Kenya', code: '+254' },
-  { flag: '🇺🇸', name: 'United States', code: '+1' },
-  { flag: '🇬🇧', name: 'United Kingdom', code: '+44' },
-]
+  { flag: "🇳🇬", name: "Nigeria", code: "+234" },
+  { flag: "🇬🇭", name: "Ghana", code: "+233" },
+  { flag: "🇰🇪", name: "Kenya", code: "+254" },
+  { flag: "🇺🇸", name: "United States", code: "+1" },
+  { flag: "🇬🇧", name: "United Kingdom", code: "+44" },
+];
 
 export default function PhoneSignUpScreen() {
-  const router = useRouter()
-  const { mutateAsync: sendOtp, isPending: isLoading } = useSendOtpMutation()
-  const showToast = useUIStore(s => s.showToast)
-  const [country, setCountry] = useState(COUNTRIES[0])
-  const [number, setNumber] = useState('')
-  const [pickerVisible, setPickerVisible] = useState(false)
+  const router = useRouter();
+  const { mutateAsync: sendOtp, isPending: isLoading } = useSendOtpMutation();
+  const showToast = useUIStore((s) => s.showToast);
+  const [country, setCountry] = useState(COUNTRIES[0]);
+  const [number, setNumber] = useState("");
+  const [pickerVisible, setPickerVisible] = useState(false);
 
   const handleNext = async () => {
-    const phone = `${country.code}${number.replace(/\D/g, '')}`
+    console.log("first");
+    const phone = `${country.code}${number.replace(/\D/g, "")}`;
     try {
-      await sendOtp({ phone })
-      router.push({ pathname: '/(auth)/verify', params: { method: 'phone', value: phone } })
+      const res = await sendOtp({ phone });
+      console.log({ res });
+      router.push({ pathname: "/(auth)/verify", params: { phone } });
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : 'Could not send code. Please try again.'
-      showToast(message, 'error')
+      const message =
+        err instanceof ApiError
+          ? err.message
+          : "Could not send code. Please try again.";
+      showToast(message, "error");
     }
-  }
+  };
 
   return (
     <FlowScreen>
@@ -49,16 +54,26 @@ export default function PhoneSignUpScreen() {
       <View style={styles.container}>
         <Text style={styles.emoji}>📱</Text>
         <Text variant="h2">What&rsquo;s your number?</Text>
-        <Text style={styles.subtitle}>We&rsquo;ll text you a code to verify. We never share this with anyone.</Text>
+        <Text style={styles.subtitle}>
+          We&rsquo;ll text you a code to verify. We never share this with
+          anyone.
+        </Text>
 
         <Text style={styles.label}>
           Phone number<Text style={styles.required}> *</Text>
         </Text>
         <View style={styles.row}>
-          <Pressable style={styles.countryPill} onPress={() => setPickerVisible(true)}>
+          <Pressable
+            style={styles.countryPill}
+            onPress={() => setPickerVisible(true)}
+          >
             <Text style={styles.flag}>{country.flag}</Text>
             <Text style={styles.countryCode}>{country.code}</Text>
-            <Icon name="chevron.down" size={12} tintColor={colors.light.textMuted} />
+            <Icon
+              name="chevron.down"
+              size={12}
+              tintColor={colors.light.textMuted}
+            />
           </Pressable>
           <Input
             containerStyle={styles.numberField}
@@ -71,21 +86,31 @@ export default function PhoneSignUpScreen() {
       </View>
 
       <View style={styles.footer}>
-        <FooterNote icon="lock.shield.fill">Your number stays private, always</FooterNote>
+        <FooterNote icon="lock.shield.fill">
+          Your number stays private, always
+        </FooterNote>
         <View style={styles.fabRow}>
-          <NextFab onPress={handleNext} disabled={!number.trim()} loading={isLoading} />
+          <NextFab
+            onPress={handleNext}
+            disabled={!number.trim()}
+            loading={isLoading}
+          />
         </View>
       </View>
 
-      <Sheet visible={pickerVisible} onClose={() => setPickerVisible(false)} title="Choose your country">
+      <Sheet
+        visible={pickerVisible}
+        onClose={() => setPickerVisible(false)}
+        title="Choose your country"
+      >
         <View style={styles.countryList}>
-          {COUNTRIES.map(c => (
+          {COUNTRIES.map((c) => (
             <Pressable
               key={c.code + c.name}
               style={styles.countryRow}
               onPress={() => {
-                setCountry(c)
-                setPickerVisible(false)
+                setCountry(c);
+                setPickerVisible(false);
               }}
             >
               <Text style={styles.flag}>{c.flag}</Text>
@@ -96,7 +121,7 @@ export default function PhoneSignUpScreen() {
         </View>
       </Sheet>
     </FlowScreen>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -117,7 +142,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.light.textAlt,
     marginBottom: 8,
   },
@@ -125,12 +150,12 @@ const styles = StyleSheet.create({
     color: colors.light.semantic.error,
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 10,
   },
   countryPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     paddingHorizontal: 14,
     borderWidth: 1.5,
@@ -144,7 +169,7 @@ const styles = StyleSheet.create({
   countryCode: {
     fontSize: 15,
     color: colors.light.text,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   numberField: {
     flex: 1,
@@ -154,15 +179,15 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   fabRow: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
     marginTop: 16,
   },
   countryList: {
     gap: 4,
   },
   countryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     paddingVertical: 12,
   },
@@ -171,4 +196,4 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.light.text,
   },
-})
+});

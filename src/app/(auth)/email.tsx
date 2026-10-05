@@ -2,16 +2,23 @@ import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
+import { ApiError } from "@/api/client";
+import { useVerifyEmailMutation } from "@/api/hooks/auth.hooks";
 import { FlowScreen } from "@/components/flow/FlowScreen";
 import { FooterNote } from "@/components/flow/FooterNote";
 import { NextFab } from "@/components/flow/NextFab";
 import { StepHeader } from "@/components/flow/StepHeader";
 import { Input } from "@/components/ui/Input";
 import { Text } from "@/components/ui/Text";
+import { useUIStore } from "@/store";
 import { colors } from "@/theme/colors";
 
 export default function EmailSignUpScreen() {
   const router = useRouter();
+  const showToast = useUIStore((s) => s.showToast);
+  const { mutateAsync: verifyEmail, isPending: isSendingCode } =
+    useVerifyEmailMutation();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -24,7 +31,25 @@ export default function EmailSignUpScreen() {
       /\d/.test(password),
     [password],
   );
-  const canSubmit = !!email.trim() && meetsPolicy && password === confirmPassword;
+  const canSubmit =
+    !!email.trim() && meetsPolicy && password === confirmPassword;
+
+  const handleNext = async () => {
+    try {
+      await verifyEmail({ code: "" });
+      router.push({
+        pathname: "/(auth)/verify-email-code",
+        params: { email, password },
+      });
+    } catch (err) {
+      console.log({ err });
+      const message =
+        err instanceof ApiError
+          ? err.message
+          : "Could not send a verification code. Please try again.";
+      showToast(message, "error");
+    }
+  };
 
   return (
     <FlowScreen>
@@ -34,7 +59,8 @@ export default function EmailSignUpScreen() {
         <Text style={styles.emoji}>📧</Text>
         <Text variant="h2">What&rsquo;s your email?</Text>
         <Text style={styles.subtitle}>
-          We&rsquo;ll send you a verification code to confirm it&rsquo;s you.
+          We&rsquo;ll send you a verification code by email to confirm
+          it&rsquo;s you.
         </Text>
 
         <View style={styles.form}>
@@ -83,12 +109,8 @@ export default function EmailSignUpScreen() {
         <View style={styles.fabRow}>
           <NextFab
             disabled={!canSubmit}
-            onPress={() =>
-              router.push({
-                pathname: "/(auth)/verify",
-                params: { method: "email", value: email, password },
-              })
-            }
+            loading={isSendingCode}
+            onPress={handleNext}
           />
         </View>
       </View>

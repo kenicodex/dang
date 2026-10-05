@@ -70,6 +70,22 @@ const config: ExpoConfig = {
     ],
     'expo-secure-store',
     'expo-apple-authentication',
+    [
+      'expo-image-picker',
+      {
+        photosPermission: 'Allow $(PRODUCT_NAME) to access your photos so you can set a profile picture.',
+        cameraPermission: 'Allow $(PRODUCT_NAME) to access your camera so you can take a profile picture.',
+      },
+    ],
+    [
+      '@react-native-google-signin/google-signin',
+      {
+        // Reversed iOS OAuth client ID from Google Cloud Console, e.g.
+        // "com.googleusercontent.apps.1234567890-abcdef". Required for native
+        // Google Sign-In to redirect back into the app on iOS.
+        iosUrlScheme: process.env.EXPO_PUBLIC_GOOGLE_IOS_URL_SCHEME ?? '',
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

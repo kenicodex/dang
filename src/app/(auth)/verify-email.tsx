@@ -6,28 +6,24 @@ import { Icon } from '@/components/ui/Icon'
 import { Button } from '@/components/ui/Button'
 import { Text } from '@/components/ui/Text'
 import { FlowScreen } from '@/components/flow/FlowScreen'
-import { useConfirmEmailChangeMutation, useVerifyEmailMutation } from '@/api/hooks/auth.hooks'
+import { useConfirmEmailChangeMutation } from '@/api/hooks/auth.hooks'
 import { colors } from '@/theme/colors'
 
 type Status = 'checking' | 'verified' | 'failed'
 
-export default function VerifyEmailScreen() {
+/** Deep-link landing screen for confirming an email *change* (Settings → Email Address). */
+export default function ConfirmEmailChangeScreen() {
   const router = useRouter()
-  const { token, type } = useLocalSearchParams<{ token?: string; type?: string }>()
-  const isChange = type === 'change'
-  const { mutateAsync: verifyEmail } = useVerifyEmailMutation()
+  const { token } = useLocalSearchParams<{ token?: string }>()
   const { mutateAsync: confirmEmailChange } = useConfirmEmailChangeMutation()
   const [status, setStatus] = useState<Status>(() => (token ? 'checking' : 'failed'))
 
   useEffect(() => {
     if (!token) return
     let cancelled = false
-    const request = isChange
-      ? confirmEmailChange({ token }).then(() => true)
-      : verifyEmail({ token }).then(response => response.verified)
-    request
-      .then(verified => {
-        if (!cancelled) setStatus(verified ? 'verified' : 'failed')
+    confirmEmailChange({ token })
+      .then(() => {
+        if (!cancelled) setStatus('verified')
       })
       .catch(() => {
         if (!cancelled) setStatus('failed')
@@ -35,7 +31,7 @@ export default function VerifyEmailScreen() {
     return () => {
       cancelled = true
     }
-  }, [token, isChange, verifyEmail, confirmEmailChange])
+  }, [token, confirmEmailChange])
 
   const goNext = () => router.replace(status === 'verified' ? '/(auth)/sign-in' : '/(auth)/forgot-password')
 
@@ -45,7 +41,7 @@ export default function VerifyEmailScreen() {
         {status === 'checking' && (
           <>
             <ActivityIndicator size="large" color={colors.light.primary[500]} />
-            <Text style={styles.headline}>Verifying your email…</Text>
+            <Text style={styles.headline}>Confirming your new email…</Text>
           </>
         )}
 
@@ -55,13 +51,9 @@ export default function VerifyEmailScreen() {
               <Icon name="checkmark" size={28} weight="bold" tintColor={colors.light.primary[500]} />
             </View>
             <Text variant="h2" style={styles.headline}>
-              {isChange ? 'Email updated' : 'Email verified'}
+              Email updated
             </Text>
-            <Text style={styles.subtitle}>
-              {isChange
-                ? 'Your new email address is now confirmed.'
-                : 'Your email address has been confirmed. You’re all set.'}
-            </Text>
+            <Text style={styles.subtitle}>Your new email address is now confirmed.</Text>
             <Button title="Continue" size="lg" style={styles.fullWidthButton} onPress={goNext} />
           </>
         )}

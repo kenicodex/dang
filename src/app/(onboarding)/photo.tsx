@@ -5,17 +5,38 @@ import { Icon } from '@/components/ui/Icon'
 import { Pressable, StyleSheet, View } from 'react-native'
 
 import { Text } from '@/components/ui/Text'
+import { ActionSheet } from '@/components/ui/ActionSheet'
 import { FlowScreen } from '@/components/flow/FlowScreen'
 import { StepHeader } from '@/components/flow/StepHeader'
 import { NextFab } from '@/components/flow/NextFab'
+import { pickImageFromCamera, pickImageFromLibrary } from '@/lib/imagePicker'
+import { useUIStore } from '@/store'
 import { colors } from '@/theme/colors'
 
 export default function PhotoStepScreen() {
   const router = useRouter()
-  const params = useLocalSearchParams<{ email?: string; password?: string; name?: string }>()
+  const params = useLocalSearchParams<{ email?: string; password?: string; phone?: string; name?: string }>()
+  const showToast = useUIStore(s => s.showToast)
   const [photoUri, setPhotoUri] = useState<string | null>(null)
+  const [sheetVisible, setSheetVisible] = useState(false)
 
   const goNext = () => router.push({ pathname: '/(onboarding)/location', params })
+
+  const handlePickFromLibrary = async () => {
+    const result = await pickImageFromLibrary()
+    if (result.status === 'success') setPhotoUri(result.uri)
+    else if (result.status === 'denied') {
+      showToast('Please allow photo library access in Settings to choose a photo.', 'error')
+    }
+  }
+
+  const handlePickFromCamera = async () => {
+    const result = await pickImageFromCamera()
+    if (result.status === 'success') setPhotoUri(result.uri)
+    else if (result.status === 'denied') {
+      showToast('Please allow camera access in Settings to take a photo.', 'error')
+    }
+  }
 
   return (
     <FlowScreen>
@@ -37,14 +58,14 @@ export default function PhotoStepScreen() {
         </Text>
 
         <View style={styles.avatarArea}>
-          <Pressable style={styles.avatarCircle} onPress={() => setPhotoUri(photoUri)}>
+          <Pressable style={styles.avatarCircle} onPress={() => setSheetVisible(true)}>
             {photoUri ? (
               <Image source={{ uri: photoUri }} style={styles.avatarImage} contentFit="cover" />
             ) : (
               <Icon name="person.fill" size={40} tintColor={colors.light.primary[300]} />
             )}
           </Pressable>
-          <Pressable style={styles.addBadge} onPress={() => setPhotoUri(photoUri)}>
+          <Pressable style={styles.addBadge} onPress={() => setSheetVisible(true)}>
             <Icon name="plus" size={16} tintColor={colors.light.neutral.white} weight="bold" />
           </Pressable>
         </View>
@@ -57,6 +78,16 @@ export default function PhotoStepScreen() {
       <View style={styles.fabRow}>
         <NextFab onPress={goNext} />
       </View>
+
+      <ActionSheet
+        visible={sheetVisible}
+        onClose={() => setSheetVisible(false)}
+        actions={[
+          { label: 'Photo Library', onPress: handlePickFromLibrary },
+          { label: 'Camera', onPress: handlePickFromCamera },
+          ...(photoUri ? [{ label: 'Remove', onPress: () => setPhotoUri(null), destructive: true }] : []),
+        ]}
+      />
     </FlowScreen>
   )
 }

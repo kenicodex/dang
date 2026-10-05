@@ -74,8 +74,10 @@ export default function PlanStepScreen() {
   const params = useLocalSearchParams<{
     email?: string
     password?: string
+    phone?: string
     name?: string
     city?: string
+    country?: string
     industry?: string
     faithTradition?: string
   }>()
@@ -98,7 +100,9 @@ export default function PlanStepScreen() {
         email: params.email,
         password: params.password,
         displayName: params.name,
+        phone: params.phone,
         city: params.city,
+        country: params.country,
         industry: params.industry,
         faithTradition: params.faithTradition,
       })

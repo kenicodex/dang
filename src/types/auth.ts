@@ -161,7 +161,7 @@ export interface ChangePasswordInput {
 }
 
 export interface EmailVerifyInput {
-  token: string
+  code: string
 }
 
 export interface EmailVerifyResponse {

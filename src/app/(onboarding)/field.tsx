@@ -28,8 +28,10 @@ export default function FieldStepScreen() {
   const params = useLocalSearchParams<{
     email?: string
     password?: string
+    phone?: string
     name?: string
     city?: string
+    country?: string
   }>()
   const [selected, setSelected] = useState<string | null>(null)
 

@@ -12,24 +12,17 @@ import { useSendOtpMutation, useVerifyOtpMutation } from '@/api/hooks/auth.hooks
 import { useUIStore } from '@/store/useUIStore'
 import { colors } from '@/theme/colors'
 
-const CODE_LENGTH = 4
+const CODE_LENGTH = 6
 const RESEND_SECONDS = 28
 
-function maskContact(method: string, value: string) {
-  if (method === 'email') {
-    const [name, domain] = value.split('@')
-    if (!domain) return value
-    return `${name.slice(0, 2)}${'*'.repeat(Math.max(name.length - 2, 1))}@${domain}`
-  }
-  return `${value.slice(0, -4)}****`
+function maskPhone(phone: string) {
+  return `${phone.slice(0, -4)}****`
 }
 
 export default function VerifyScreen() {
   const router = useRouter()
-  const { method = 'phone', value = '+234 812 345 6789', password } = useLocalSearchParams<{
-    method?: string
-    value?: string
-    password?: string
+  const { phone = '+234 812 345 6789' } = useLocalSearchParams<{
+    phone?: string
   }>()
   const { mutateAsync: verifyOtp, isPending: isLoading } = useVerifyOtpMutation()
   const { mutateAsync: sendOtp } = useSendOtpMutation()
@@ -45,9 +38,8 @@ export default function VerifyScreen() {
 
   const handleResend = async () => {
     setSecondsLeft(RESEND_SECONDS)
-    if (method !== 'phone') return
     try {
-      await sendOtp({ phone: value })
+      await sendOtp({ phone })
     } catch (err) {
       const message = err instanceof ApiError ? err.message : 'Could not resend code.'
       showToast(message, 'error')
@@ -55,13 +47,9 @@ export default function VerifyScreen() {
   }
 
   const handleNext = async () => {
-    if (method !== 'phone') {
-      router.push({ pathname: '/(onboarding)/name', params: { email: value, password } })
-      return
-    }
     try {
-      await verifyOtp({ phone: value, code })
-      router.push('/(onboarding)/name')
+      await verifyOtp({ phone, code })
+      router.push({ pathname: '/(onboarding)/name', params: { phone } })
     } catch (err) {
       const message = err instanceof ApiError ? err.message : 'That code didn’t work. Please try again.'
       showToast(message, 'error')
@@ -80,7 +68,7 @@ export default function VerifyScreen() {
         <Text variant="h2" style={styles.headline}>Enter your code</Text>
         <Text style={styles.subtitle}>
           We sent a {CODE_LENGTH}-digit code to{'\n'}
-          <Text style={styles.subtitleStrong}>{maskContact(method, value)}</Text>
+          <Text style={styles.subtitleStrong}>{maskPhone(phone)}</Text>
         </Text>
 
         <OtpInput length={CODE_LENGTH} value={code} onChangeText={setCode} autoFocus />

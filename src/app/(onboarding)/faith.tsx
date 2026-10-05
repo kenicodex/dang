@@ -13,8 +13,10 @@ type Faith = 'christian' | 'muslim'
 type FaithStepParams = {
   email?: string
   password?: string
+  phone?: string
   name?: string
   city?: string
+  country?: string
   industry?: string
 }
 
