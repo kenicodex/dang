@@ -1,45 +1,36 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Icon } from '@/components/ui/Icon'
-import { StyleSheet, View } from 'react-native'
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete'
+import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native'
 
 import { Text } from '@/components/ui/Text'
+import { Sheet } from '@/components/ui/Sheet'
 import { FlowScreen } from '@/components/flow/FlowScreen'
 import { StepHeader } from '@/components/flow/StepHeader'
 import { NextFab } from '@/components/flow/NextFab'
 import { FooterNote } from '@/components/flow/FooterNote'
+import { NIGERIA_STATES } from '@/constants/nigeriaStates'
 import { colors } from '@/theme/colors'
 
-const GOOGLE_PLACES_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY ?? ''
-
-interface PlaceDetailAddressComponent {
-  long_name: string
-  short_name: string
-  types: string[]
-}
-
-interface PlaceDetailLike {
-  address_components?: PlaceDetailAddressComponent[]
-}
-
-function extractCityCountry(detail: PlaceDetailLike | null) {
-  const components = detail?.address_components ?? []
-  const find = (type: string) => components.find(c => c.types.includes(type))?.long_name
-  const city = find('locality') ?? find('postal_town') ?? find('administrative_area_level_2')
-  const country = find('country')
-  return { city, country }
-}
+const COUNTRY = 'Nigeria'
 
 export default function LocationStepScreen() {
   const router = useRouter()
   const params = useLocalSearchParams<{ email?: string; password?: string; phone?: string; name?: string }>()
-  const [city, setCity] = useState('')
-  const [country, setCountry] = useState('')
+  const [state, setState] = useState('')
+  const [query, setQuery] = useState('')
+  const [sheetVisible, setSheetVisible] = useState(false)
 
-  const canSubmit = !!city.trim()
+  const results = useMemo(() => {
+    const trimmed = query.trim().toLowerCase()
+    if (!trimmed) return NIGERIA_STATES
+    return NIGERIA_STATES.filter(s => s.toLowerCase().includes(trimmed))
+  }, [query])
 
-  const goNext = () => router.push({ pathname: '/(onboarding)/field', params: { ...params, city, country } })
+  const canSubmit = !!state
+
+  const goNext = () =>
+    router.push({ pathname: '/(onboarding)/field', params: { ...params, city: state, country: COUNTRY } })
 
   return (
     <FlowScreen>
@@ -49,55 +40,55 @@ export default function LocationStepScreen() {
         <Text style={styles.emoji}>📍</Text>
         <Text variant="h2">Where are you based?</Text>
         <Text style={styles.subtitle}>
-          We&rsquo;ll connect you with sisters in your city. Your exact location is never shared.
+          We&rsquo;ll connect you with sisters in your state. Your exact location is never shared.
         </Text>
 
-        <GooglePlacesAutocomplete
-          placeholder="search your city"
-          fetchDetails
-          minLength={2}
-          debounce={300}
-          enablePoweredByContainer={false}
-          query={{ key: GOOGLE_PLACES_API_KEY, language: 'en', types: '(cities)' }}
-          onPress={(_data, detail) => {
-            const parsed = extractCityCountry(detail)
-            if (parsed.city) setCity(parsed.city)
-            if (parsed.country) setCountry(parsed.country)
-          }}
-          onFail={() => {}}
-          textInputProps={{
-            placeholderTextColor: colors.light.textSoft,
-          }}
-          renderLeftButton={() => (
-            <View style={styles.searchIcon}>
-              <Icon name="magnifyingglass" size={16} tintColor={colors.light.textSoft} />
-            </View>
-          )}
-          styles={{
-            container: styles.autocompleteContainer,
-            textInputContainer: styles.searchField,
-            textInput: styles.searchInput,
-            listView: styles.listView,
-            row: styles.resultRow,
-            description: styles.resultText,
-            separator: styles.resultSeparator,
-          }}
-        />
-
-        {!!city && (
-          <Text style={styles.selectedLocation}>
-            Selected: {city}
-            {country ? `, ${country}` : ''}
+        <Pressable style={styles.selector} onPress={() => setSheetVisible(true)}>
+          <Icon name="magnifyingglass" size={16} tintColor={colors.light.textSoft} />
+          <Text style={[styles.selectorText, !state && styles.selectorPlaceholder]}>
+            {state || 'select your state'}
           </Text>
-        )}
+          <Icon name="chevron.down" size={12} tintColor={colors.light.textMuted} />
+        </Pressable>
       </View>
 
       <View style={styles.footer}>
-        <FooterNote icon="lock.shield.fill">Only your city is shown, never your address</FooterNote>
+        <FooterNote icon="lock.shield.fill">Only your state is shown, never your address</FooterNote>
         <View style={styles.fabRow}>
           <NextFab onPress={goNext} disabled={!canSubmit} />
         </View>
       </View>
+
+      <Sheet visible={sheetVisible} onClose={() => setSheetVisible(false)} title="Choose your state">
+        <View style={styles.searchField}>
+          <Icon name="magnifyingglass" size={16} tintColor={colors.light.textSoft} />
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Search states"
+            placeholderTextColor={colors.light.textSoft}
+            style={styles.searchInput}
+            autoFocus
+          />
+        </View>
+        <ScrollView style={styles.stateList} keyboardShouldPersistTaps="handled">
+          {results.map(s => (
+            <Pressable
+              key={s}
+              style={styles.stateRow}
+              onPress={() => {
+                setState(s)
+                setQuery('')
+                setSheetVisible(false)
+              }}
+            >
+              <Text style={styles.stateRowText}>{s}</Text>
+              {state === s && <Icon name="checkmark" size={16} weight="bold" tintColor={colors.light.primary[500]} />}
+            </Pressable>
+          ))}
+          {results.length === 0 && <Text style={styles.empty}>No states found.</Text>}
+        </ScrollView>
+      </Sheet>
     </FlowScreen>
   )
 }
@@ -118,52 +109,59 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 28,
   },
-  autocompleteContainer: {
-    flex: 0,
-  },
-  searchField: {
+  selector: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     paddingHorizontal: 18,
+    paddingVertical: 14,
     borderRadius: 999,
     backgroundColor: colors.light.surface,
     borderWidth: 1.5,
     borderColor: colors.light.border,
   },
-  searchIcon: {
-    justifyContent: 'center',
+  selectorText: {
+    flex: 1,
+    fontSize: 15,
+    color: colors.light.text,
+  },
+  selectorPlaceholder: {
+    color: colors.light.textSoft,
+  },
+  searchField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 999,
+    backgroundColor: colors.light.surfaceAlt,
+    marginBottom: 12,
   },
   searchInput: {
     flex: 1,
-    height: 50,
     fontSize: 15,
     color: colors.light.text,
-    backgroundColor: 'transparent',
   },
-  listView: {
-    marginTop: 8,
-    borderRadius: 16,
-    backgroundColor: colors.light.surface,
-    overflow: 'hidden',
+  stateList: {
+    maxHeight: 360,
   },
-  resultRow: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: colors.light.surface,
+  stateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.light.border,
   },
-  resultText: {
-    fontSize: 14,
+  stateRowText: {
+    fontSize: 15,
     color: colors.light.text,
   },
-  resultSeparator: {
-    height: 1,
-    backgroundColor: colors.light.border,
-  },
-  selectedLocation: {
-    marginTop: 14,
-    fontSize: 13,
+  empty: {
+    textAlign: 'center',
     color: colors.light.textMuted,
+    paddingVertical: 24,
   },
   footer: {
     paddingHorizontal: 24,

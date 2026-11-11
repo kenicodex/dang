@@ -11,6 +11,7 @@ import { ApiError } from '@/api/client'
 import { useSendOtpMutation, useVerifyOtpMutation } from '@/api/hooks/auth.hooks'
 import { useUIStore } from '@/store/useUIStore'
 import { colors } from '@/theme/colors'
+import { USE_MOCK_DATA } from '@/constants/env'
 
 const CODE_LENGTH = 6
 const RESEND_SECONDS = 28
@@ -90,7 +91,7 @@ export default function VerifyScreen() {
       </View>
 
       <View style={styles.fabRow}>
-        <NextFab onPress={handleNext} disabled={code.length < CODE_LENGTH} loading={isLoading} />
+        <NextFab onPress={handleNext} disabled={!USE_MOCK_DATA && code.length < CODE_LENGTH} loading={isLoading} />
       </View>
     </FlowScreen>
   )

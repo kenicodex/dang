@@ -115,6 +115,16 @@ export default function CreatePostScreen() {
           <Icon name="chevron.down" size={12} tintColor={colors.light.primary[500]} />
         </Pressable>
 
+        <View style={styles.approvalBanner}>
+          <Icon name="info.circle" size={20} tintColor={colors.light.primary[500]} />
+          <View style={styles.approvalText}>
+            <Text style={styles.approvalTitle}>Posts require approval</Text>
+            <Text style={styles.approvalBody}>
+              Your post will be reviewed by a moderator before it becomes visible to members.
+            </Text>
+          </View>
+        </View>
+
         <View style={styles.textBox}>
           <TextInput
             style={styles.textInput}
@@ -236,6 +246,28 @@ const styles = StyleSheet.create({
     color: colors.light.primary[500],
     fontWeight: '700',
     fontSize: 14,
+  },
+  approvalBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    backgroundColor: colors.light.primary[50],
+    borderRadius: 16,
+    padding: 16,
+  },
+  approvalText: {
+    flex: 1,
+    gap: 4,
+  },
+  approvalTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.light.primary[600],
+  },
+  approvalBody: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.light.primary[600],
   },
   textBox: {
     flex: 1,

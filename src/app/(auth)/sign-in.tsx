@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/Input";
 import { Text } from "@/components/ui/Text";
 import { useUIStore } from "@/store/useUIStore";
 import { colors } from "@/theme/colors";
+import { USE_MOCK_DATA } from "@/constants/env";
 
 export default function SignInScreen() {
   const router = useRouter();
@@ -81,7 +82,7 @@ export default function SignInScreen() {
           variant="primary"
           size="lg"
           loading={isLoading}
-          disabled={!email.trim() || !password}
+          disabled={!USE_MOCK_DATA && (!email.trim() || !password)}
           style={styles.submit}
           onPress={handleSignIn}
         />

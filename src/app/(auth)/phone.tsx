@@ -14,6 +14,7 @@ import { Sheet } from "@/components/ui/Sheet";
 import { Text } from "@/components/ui/Text";
 import { useUIStore } from "@/store/useUIStore";
 import { colors } from "@/theme/colors";
+import { USE_MOCK_DATA } from "@/constants/env";
 
 const COUNTRIES = [
   { flag: "🇳🇬", name: "Nigeria", code: "+234" },
@@ -92,7 +93,7 @@ export default function PhoneSignUpScreen() {
         <View style={styles.fabRow}>
           <NextFab
             onPress={handleNext}
-            disabled={!number.trim()}
+            disabled={!USE_MOCK_DATA && !number.trim()}
             loading={isLoading}
           />
         </View>

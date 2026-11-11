@@ -10,6 +10,7 @@ import type {
   EmailVerifyInput,
   EmailVerifyResponse,
   GoogleOAuthRequest,
+  ResendEmailVerificationResponse,
   LoginRequest,
   LogoutRequest,
   OtpSendRequest,
@@ -39,6 +40,7 @@ export interface AuthService {
   resetPassword: (input: PasswordResetInput) => Promise<PasswordResetResponse>;
   changePassword: (input: ChangePasswordInput) => Promise<void>;
   verifyEmail: (input: EmailVerifyInput) => Promise<EmailVerifyResponse>;
+  resendEmailVerification: () => Promise<ResendEmailVerificationResponse>;
   requestEmailChange: (input: EmailChangeRequestInput) => Promise<void>;
   confirmEmailChange: (input: EmailChangeConfirmInput) => Promise<void>;
   requestPhoneChange: (input: PhoneChangeSendOtpInput) => Promise<void>;
@@ -69,8 +71,9 @@ export function createAuthService(
     resetPassword: (input) =>
       client.post("/auth/password/reset", input, { auth: false }),
     changePassword: (input) => client.patch("/auth/password", input),
-    // [Member] endpoint — requires the caller's session, unlike most other /auth/* calls.
+    // [Member] endpoints — require the caller's session, unlike most other /auth/* calls.
     verifyEmail: (input) => client.post("/auth/email/verify", input),
+    resendEmailVerification: () => client.post("/auth/email/verify/resend"),
     requestEmailChange: (input) => client.post("/auth/email/change", input),
     confirmEmailChange: (input) =>
       client.post("/auth/email/confirm-change", input, { auth: false }),

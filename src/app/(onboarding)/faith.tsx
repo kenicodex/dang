@@ -9,7 +9,7 @@ import { NextFab } from '@/components/flow/NextFab'
 import { FooterNote } from '@/components/flow/FooterNote'
 import { colors } from '@/theme/colors'
 
-type Faith = 'christian' | 'muslim'
+type Faith = 'CHRISTIAN' | 'MUSLIM' | 'OTHER'
 type FaithStepParams = {
   email?: string
   password?: string
@@ -22,16 +22,22 @@ type FaithStepParams = {
 
 const OPTIONS: { key: Faith; emoji: string; title: string; description: string }[] = [
   {
-    key: 'christian',
+    key: 'CHRISTIAN',
     emoji: '✝️',
     title: 'Christian',
     description: 'Bible verses, guided prayers, and daily devotionals',
   },
   {
-    key: 'muslim',
+    key: 'MUSLIM',
     emoji: '☪️',
     title: 'Muslim',
     description: 'Quranic verses, daily prayers, and spiritual reflections',
+  },
+  {
+    key: 'OTHER',
+    emoji: '🙏',
+    title: 'Other',
+    description: 'A different faith tradition, or none at all',
   },
 ]
 

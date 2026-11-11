@@ -168,6 +168,12 @@ export interface EmailVerifyResponse {
   verified: boolean
 }
 
+export interface ResendEmailVerificationResponse {
+  sent: boolean
+  alreadyVerified: boolean
+  expiresInSeconds: number
+}
+
 export interface EmailChangeRequestInput {
   newEmail: string
 }

@@ -2,22 +2,17 @@ import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { ApiError } from "@/api/client";
-import { useVerifyEmailMutation } from "@/api/hooks/auth.hooks";
 import { FlowScreen } from "@/components/flow/FlowScreen";
 import { FooterNote } from "@/components/flow/FooterNote";
 import { NextFab } from "@/components/flow/NextFab";
 import { StepHeader } from "@/components/flow/StepHeader";
 import { Input } from "@/components/ui/Input";
 import { Text } from "@/components/ui/Text";
-import { useUIStore } from "@/store";
 import { colors } from "@/theme/colors";
+import { USE_MOCK_DATA } from "@/constants/env";
 
 export default function EmailSignUpScreen() {
   const router = useRouter();
-  const showToast = useUIStore((s) => s.showToast);
-  const { mutateAsync: verifyEmail, isPending: isSendingCode } =
-    useVerifyEmailMutation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,21 +29,11 @@ export default function EmailSignUpScreen() {
   const canSubmit =
     !!email.trim() && meetsPolicy && password === confirmPassword;
 
-  const handleNext = async () => {
-    try {
-      await verifyEmail({ code: "" });
-      router.push({
-        pathname: "/(auth)/verify-email-code",
-        params: { email, password },
-      });
-    } catch (err) {
-      console.log({ err });
-      const message =
-        err instanceof ApiError
-          ? err.message
-          : "Could not send a verification code. Please try again.";
-      showToast(message, "error");
-    }
+  const handleNext = () => {
+    router.push({
+      pathname: "/(onboarding)/name",
+      params: { email, password },
+    });
   };
 
   return (
@@ -107,11 +92,7 @@ export default function EmailSignUpScreen() {
           Your data is encrypted and secure
         </FooterNote>
         <View style={styles.fabRow}>
-          <NextFab
-            disabled={!canSubmit}
-            loading={isSendingCode}
-            onPress={handleNext}
-          />
+          <NextFab disabled={!USE_MOCK_DATA && !canSubmit} onPress={handleNext} />
         </View>
       </View>
     </FlowScreen>

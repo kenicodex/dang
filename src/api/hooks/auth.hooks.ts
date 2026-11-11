@@ -131,6 +131,10 @@ export function useVerifyEmailMutation() {
   return useMutation({ mutationFn: authApi.verifyEmail })
 }
 
+export function useResendEmailVerificationMutation() {
+  return useMutation({ mutationFn: authApi.resendEmailVerification })
+}
+
 export function useRequestEmailChangeMutation() {
   return useMutation({
     mutationFn: (newEmail: string) => authApi.requestEmailChange({ newEmail }),

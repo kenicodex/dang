@@ -1,5 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 
+import { createMockApiClient } from "@/api/mock/mockApiClient";
+import { USE_MOCK_DATA } from "@/constants/env";
 import { authStorage } from "@/services/authStorage";
 
 export type RequestMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -171,9 +173,12 @@ export function createApiClient(config: ApiClientConfig): ApiClientInterface {
   };
 }
 
-export const apiClient: ApiClientInterface = createApiClient({
-  baseUrl:
-    process.env.EXPO_PUBLIC_API_BASE_URL ?? "https://dang-y2k5.onrender.com/",
-  getAuthToken: () => authStorage.getAccessToken(),
-  onAuthFailure: () => authStorage.clearSession(),
-});
+export const apiClient: ApiClientInterface = USE_MOCK_DATA
+  ? createMockApiClient()
+  : createApiClient({
+      baseUrl:
+        process.env.EXPO_PUBLIC_API_BASE_URL ??
+        "https://dang-y2k5.onrender.com/",
+      getAuthToken: () => authStorage.getAccessToken(),
+      onAuthFailure: () => authStorage.clearSession(),
+    });

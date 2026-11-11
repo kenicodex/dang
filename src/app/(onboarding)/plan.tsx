@@ -106,7 +106,7 @@ export default function PlanStepScreen() {
         industry: params.industry,
         faithTradition: params.faithTradition,
       })
-      router.push('/(onboarding)/welcome')
+      router.push('/(auth)/verify-email-code')
     } catch (err) {
       const message = err instanceof ApiError ? err.message : 'Could not create your account. Please try again.'
       showToast(message, 'error')
